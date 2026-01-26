@@ -672,6 +672,288 @@ curl https://your-domain.com/api/status
 curl https://your-domain.com/
 ```
 
+### Verify Web Server and nginx Reverse Proxy
+
+After deploying with nginx, thoroughly verify the web server is correctly proxying requests and serving your application over HTTP and HTTPS.
+
+#### Test HTTP Access
+
+Verify the application is accessible via HTTP from external clients:
+
+```bash
+# Test from your local machine (not the server)
+curl http://your-domain.com
+```
+
+**Expected output:**
+
+If you configured HTTP to HTTPS redirect (recommended with Certbot), you should see:
+```html
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<center>nginx</center>
+</body>
+</html>
+```
+
+If redirect is not configured, you should see your application's HTML response (the BVG status page).
+
+**Success criteria:**
+- Returns HTTP 200 (no redirect) or HTTP 301 (with redirect to HTTPS)
+- Response time < 2 seconds
+- No connection errors or timeouts
+
+**Test the API endpoint:**
+```bash
+curl http://your-domain.com/api/status
+```
+
+**Expected output (if no HTTPS redirect):**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "uptime": 300.456,
+  "environment": "production",
+  "nodeVersion": "v18.x.x"
+}
+```
+
+**If redirect is enabled**, curl will follow the redirect automatically with `-L`:
+```bash
+curl -L http://your-domain.com/api/status
+```
+
+#### Test HTTPS Access
+
+Verify the application is accessible via HTTPS with valid SSL/TLS certificate:
+
+```bash
+# Test from your local machine
+curl https://your-domain.com
+```
+
+**Expected output:**
+```html
+<!DOCTYPE html>
+<html>
+...
+[Your application's HTML response]
+...
+</html>
+```
+
+**Test the API endpoint:**
+```bash
+curl https://your-domain.com/api/status
+```
+
+**Expected output:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "uptime": 300.456,
+  "environment": "production",
+  "nodeVersion": "v18.x.x"
+}
+```
+
+**Success criteria:**
+- Returns HTTP 200
+- Valid SSL certificate (no warnings)
+- Response time < 2 seconds
+- Returns same content as local verification
+
+**Test SSL certificate validity:**
+```bash
+# Verify certificate details
+curl -vI https://your-domain.com 2>&1 | grep -A 10 "SSL connection"
+```
+
+**Expected output includes:**
+```
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* Server certificate:
+*  subject: CN=your-domain.com
+*  issuer: C=US; O=Let's Encrypt; CN=R3
+*  SSL certificate verify ok.
+```
+
+#### Verify HTTP Response Headers
+
+Check that nginx is correctly setting security headers and proxy headers:
+
+```bash
+# Test security headers on HTTPS
+curl -I https://your-domain.com
+```
+
+**Expected output:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.x.x
+Date: Mon, 15 Jan 2024 10:30:45 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 1234
+Connection: keep-alive
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+X-Powered-By: Express
+```
+
+**Success criteria:**
+- `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking attacks
+- `X-Content-Type-Options: nosniff` - Prevents MIME-type sniffing
+- `X-XSS-Protection: 1; mode=block` - Enables XSS filter
+- `X-Powered-By: Express` - Confirms request reached Express.js application
+- `Server: nginx` - Confirms nginx is handling the request
+
+**Test API endpoint headers:**
+```bash
+curl -I https://your-domain.com/api/status
+```
+
+**Expected output:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.x.x
+Date: Mon, 15 Jan 2024 10:30:45 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 156
+Connection: keep-alive
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+X-Powered-By: Express
+```
+
+**Additional header verification with verbose output:**
+```bash
+# See full request/response cycle
+curl -v https://your-domain.com/api/status
+```
+
+This shows:
+- TLS handshake details
+- All request headers sent
+- All response headers received
+- Response body
+
+**Troubleshooting header issues:**
+
+- **Missing security headers** - nginx configuration not applied:
+  ```bash
+  # Verify nginx configuration
+  sudo nginx -t
+
+  # Check your site config includes security headers
+  sudo cat /etc/nginx/sites-available/isbvgfuckedup | grep "add_header"
+
+  # Reload nginx to apply changes
+  sudo systemctl reload nginx
+  ```
+
+- **No `X-Powered-By: Express` header** - Application not responding:
+  ```bash
+  # Verify application is running
+  pm2 status
+  curl http://localhost:3000/api/status
+
+  # Check nginx error logs
+  sudo tail -f /var/log/nginx/isbvgfuckedup_error.log
+  ```
+
+- **Certificate errors** - SSL not properly configured:
+  ```bash
+  # Check certificate status
+  sudo certbot certificates
+
+  # Renew if expired or expiring soon
+  sudo certbot renew
+
+  # Verify nginx SSL configuration
+  sudo cat /etc/nginx/sites-available/isbvgfuckedup | grep ssl
+  ```
+
+#### Test from Web Browser
+
+Open your browser and visit:
+
+1. **HTTP URL:** `http://your-domain.com`
+   - Should redirect to HTTPS (if configured)
+   - Or show the application
+
+2. **HTTPS URL:** `https://your-domain.com`
+   - Should show valid certificate (lock icon in address bar)
+   - Should display the BVG Status Monitor page
+   - No browser security warnings
+
+3. **API Endpoint:** `https://your-domain.com/api/status`
+   - Should return JSON response
+   - Should show in browser as formatted JSON
+
+**Browser DevTools verification:**
+
+Open browser DevTools (F12) → Network tab → Reload page:
+
+1. **Check Headers tab:**
+   - Verify `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection` present
+   - Verify `Content-Type` is correct (text/html or application/json)
+
+2. **Check Security tab:**
+   - Certificate should be valid
+   - Connection should use TLS 1.2 or 1.3
+   - Cipher suite should be modern/secure
+
+3. **Check Console tab:**
+   - No JavaScript errors
+   - No mixed content warnings (HTTP resources on HTTPS page)
+
+#### Test External DNS Resolution
+
+Verify your domain correctly resolves to your server:
+
+```bash
+# Check DNS resolution
+nslookup your-domain.com
+
+# Or use dig for more details
+dig your-domain.com
+```
+
+**Expected output:**
+```
+Server:		8.8.8.8
+Address:	8.8.8.8#53
+
+Non-authoritative answer:
+Name:	your-domain.com
+Address: XXX.XXX.XXX.XXX
+```
+
+Where `XXX.XXX.XXX.XXX` is your Hetzner server's IP address.
+
+**Verify HTTPS from multiple locations:**
+
+Test from different networks to ensure global accessibility:
+- Your local computer (different network than server)
+- Mobile device on cellular network
+- Online tools like https://www.ssllabs.com/ssltest/
+
+**Success criteria for complete web server verification:**
+- ✅ HTTP access works (redirects to HTTPS or serves content)
+- ✅ HTTPS access works with valid certificate
+- ✅ Security headers present in all responses
+- ✅ API endpoints return correct JSON
+- ✅ DNS resolves correctly
+- ✅ Accessible from multiple networks/locations
+- ✅ No browser security warnings
+- ✅ Response times < 2 seconds
+
 ### Verify PM2 Process Manager
 
 After deploying with PM2, thoroughly verify the process manager is correctly managing your application.
