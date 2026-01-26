@@ -446,7 +446,7 @@ pm2 monit
 
 ## Step 4: Configure nginx Reverse Proxy
 
-nginx forwards external HTTP/HTTPS traffic to your Node.js application running on port 3000.
+nginx forwards external HTTP/HTTPS traffic to your Node.js application running on port 3000. This section covers installation, configuration with security headers, and verification.
 
 ### Install nginx
 
@@ -459,9 +459,16 @@ sudo apt install nginx
 nginx -v
 ```
 
-**No sudo access?** Use Hetzner's hosting panel (konsoleH) to configure the reverse proxy. Note that activating Node.js in konsoleH will disable PHP on the same domain.
+**Expected output:**
+```
+nginx version: nginx/1.x.x
+```
+
+**No sudo access?** Use Hetzner's hosting panel (konsoleH) to configure the reverse proxy. Note that activating Node.js in konsoleH will disable PHP on the same domain. If using konsoleH, skip the manual configuration steps below and use the hosting panel's interface.
 
 ### Create nginx Configuration
+
+The application includes a production-ready nginx configuration template at `nginx-site.conf`. This configuration includes security headers, proper proxy settings, WebSocket support, and logging.
 
 Create a new site configuration:
 
@@ -469,28 +476,67 @@ Create a new site configuration:
 sudo nano /etc/nginx/sites-available/isbvgfuckedup
 ```
 
-Add this configuration:
+Add this comprehensive configuration:
 
 ```nginx
+# nginx reverse proxy configuration for isbvgfuckedup
 server {
     listen 80;
-    server_name your-domain.com www.your-domain.com;
+    listen [::]:80;
+    server_name your-domain.com;
 
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Proxy all requests to Express.js application on port 3000
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
+
+        # WebSocket support (upgrade headers)
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
+
+        # Essential proxy headers for Express 'trust proxy' setting
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Prevent proxy caching issues
         proxy_cache_bypass $http_upgrade;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
     }
+
+    # Optional: Custom error pages
+    error_page 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+
+    # Logging
+    access_log /var/log/nginx/isbvgfuckedup_access.log;
+    error_log /var/log/nginx/isbvgfuckedup_error.log;
 }
+
+# SSL configuration will be automatically added by Certbot
 ```
 
-**Important:** Replace `your-domain.com` with your actual domain name.
+**Important configuration notes:**
+
+- **server_name:** Replace `your-domain.com` with your actual domain name
+- **Security headers:** Protect against clickjacking, MIME-sniffing, and XSS attacks
+- **WebSocket support:** Enables real-time communication if needed in future
+- **Proxy headers:** Required for Express.js to correctly detect client IP and protocol
+- **Timeouts:** Set to 60 seconds to handle slow API responses
+- **Custom error pages:** Shows nginx error page for 502/503/504 errors
+- **Logging:** Separate log files for this application make debugging easier
 
 ### Enable Site and Reload nginx
 
@@ -507,6 +553,56 @@ sudo systemctl reload nginx
 # Verify nginx is running
 sudo systemctl status nginx
 ```
+
+**Expected output from `nginx -t`:**
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+**Expected output from `systemctl status nginx`:**
+```
+● nginx.service - A high performance web server and a reverse proxy server
+   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+   Active: active (running) since ...
+```
+
+**Troubleshooting nginx configuration:**
+
+- **Error: "nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)"**
+  ```bash
+  # Check what's using port 80
+  sudo lsof -i :80
+
+  # If another nginx process, restart it
+  sudo systemctl restart nginx
+
+  # If Apache or other server, stop it first
+  sudo systemctl stop apache2
+  sudo systemctl start nginx
+  ```
+
+- **Error: "nginx: [emerg] could not build server_names_hash"**
+  ```bash
+  # Add to /etc/nginx/nginx.conf in http block:
+  # server_names_hash_bucket_size 64;
+  sudo nano /etc/nginx/nginx.conf
+  sudo nginx -t
+  sudo systemctl reload nginx
+  ```
+
+- **502 Bad Gateway error**
+  ```bash
+  # Verify application is running
+  pm2 status
+  curl http://localhost:3000/api/status
+
+  # Check nginx error logs
+  sudo tail -f /var/log/nginx/isbvgfuckedup_error.log
+
+  # Ensure proxy_pass port matches application PORT
+  cat .env | grep PORT
+  ```
 
 ## Step 5: Configure SSL/TLS with Let's Encrypt
 
