@@ -345,6 +345,34 @@ pm2 --version
 
 ### Start Application
 
+The application includes a `ecosystem.config.js` file with production-ready PM2 configuration. You can start the application using either the ecosystem file (recommended) or a basic command.
+
+**Create logs directory:**
+
+```bash
+# Create directory for PM2 logs
+mkdir -p logs
+```
+
+**Option 1: Using ecosystem.config.js (Recommended)**
+
+The ecosystem file provides comprehensive configuration including environment variables, logging, memory limits, and restart policies:
+
+```bash
+# Start using ecosystem configuration
+pm2 start ecosystem.config.js
+
+# Verify it's running
+pm2 status
+
+# Check logs for errors
+pm2 logs isbvgfuckedup --lines 50
+```
+
+**Option 2: Basic PM2 command**
+
+For simple deployments, you can start with a basic command:
+
 ```bash
 # Start the application with PM2
 pm2 start src/server.js --name isbvgfuckedup
@@ -356,10 +384,18 @@ pm2 status
 pm2 logs isbvgfuckedup --lines 50
 ```
 
-Expected output in logs:
+**Expected output in logs:**
 ```
 Server running on port 3000
 ```
+
+**Note:** The ecosystem.config.js approach is preferred for production as it:
+- Centralizes all PM2 configuration in one file
+- Defines production and development environments
+- Configures logging paths (./logs/pm2-error.log, ./logs/pm2-out.log)
+- Sets memory limits (1GB max before restart)
+- Configures restart policies (max 15 restarts, 4s delay)
+- Includes all required environment variables
 
 ### Configure Auto-Start on Reboot
 
