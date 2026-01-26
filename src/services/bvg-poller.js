@@ -118,7 +118,9 @@ export function createPoller(overrides = {}) {
    */
   function start() {
     // Already running — avoid duplicate intervals
-    if (timer !== null) return;
+    if (timer !== null) {
+      return;
+    }
 
     // Prime cache (already done in createPoller, but explicit for clarity)
     cache = unknownStatus();

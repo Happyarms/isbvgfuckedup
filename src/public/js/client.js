@@ -8,15 +8,15 @@
 (function () {
   'use strict';
 
-  var REFRESH_INTERVAL = 60;
-  var secondsRemaining = REFRESH_INTERVAL;
-  var timerInterval = null;
+  const REFRESH_INTERVAL = 60;
+  let secondsRemaining = REFRESH_INTERVAL;
+  let timerInterval = null;
 
   /**
    * Find the refresh indicator element and update its text with the countdown.
    */
   function updateCountdown() {
-    var el = document.querySelector('.refresh-indicator');
+    const el = document.querySelector('.refresh-indicator');
     if (!el) {
       return;
     }

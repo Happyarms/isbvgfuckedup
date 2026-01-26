@@ -17,5 +17,14 @@
     "eqeqeq": ["error", "always"],
     "curly": ["error", "all"],
     "no-throw-literal": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/public/**/*.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      }
+    }
+  ]
 }
