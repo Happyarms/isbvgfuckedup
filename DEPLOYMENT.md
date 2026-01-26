@@ -1246,6 +1246,327 @@ pm2 status
 curl http://localhost:3000/api/status
 ```
 
+### Verify BVG API Integration
+
+After deploying the application, thoroughly verify the BVG API integration is functioning correctly and returning real-time departure data.
+
+#### Test API Endpoint Response
+
+Test that the `/api/status` endpoint returns valid BVG departure data:
+
+```bash
+# Test from the server
+curl http://localhost:3000/api/status
+
+# Or test externally (after nginx is configured)
+curl https://your-domain.com/api/status
+```
+
+**Expected output:**
+```json
+{
+  "status": "operational",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "realtimeDataUpdatedAt": "2024-01-15T10:30:42.000Z",
+  "departures": [
+    {
+      "when": "2024-01-15T10:35:00.000Z",
+      "delay": 120,
+      "line": {
+        "name": "U2",
+        "type": "subway"
+      },
+      "direction": "Pankow"
+    },
+    {
+      "when": "2024-01-15T10:38:00.000Z",
+      "delay": 0,
+      "line": {
+        "name": "S1",
+        "type": "suburban"
+      },
+      "direction": "Wannsee"
+    }
+  ],
+  "stats": {
+    "total": 15,
+    "delayed": 3,
+    "onTime": 12
+  }
+}
+```
+
+**Success criteria:**
+- Returns HTTP 200 status code
+- Valid JSON response structure
+- Response time < 2 seconds
+
+#### Verify Departures Array
+
+Ensure the `departures` array contains valid BVG departure data:
+
+```bash
+# Extract and format departures array
+curl -s http://localhost:3000/api/status | jq '.departures'
+```
+
+**Expected output:**
+```json
+[
+  {
+    "when": "2024-01-15T10:35:00.000Z",
+    "delay": 120,
+    "line": { "name": "U2", "type": "subway" },
+    "direction": "Pankow"
+  },
+  ...
+]
+```
+
+**Success criteria:**
+- `departures` array exists and is not empty
+- Each departure contains required fields:
+  - `when`: ISO 8601 timestamp of scheduled/expected departure
+  - `delay`: Delay in seconds (number, can be 0 or null)
+  - `line`: Object with `name` and `type` (e.g., "U2", "subway")
+  - `direction`: String indicating destination
+- Array contains multiple departures (typically 10-20 entries)
+
+**Troubleshooting empty departures:**
+
+- **Empty array `[]`** - BVG API returned no data or API error:
+  ```bash
+  # Check PM2 logs for API errors
+  pm2 logs isbvgfuckedup --lines 50 | grep -i "error\|bvg\|api"
+
+  # Common causes:
+  # - BVG API rate limiting (429 errors)
+  # - Invalid BVG_API_TYPE in .env
+  # - Network connectivity issues
+  # - BVG API service outage
+  ```
+
+- **Missing fields in departures** - Check configuration:
+  ```bash
+  # Verify BVG_API_TYPE is set correctly
+  cat .env | grep BVG_API_TYPE
+  # Should be: BVG_API_TYPE=vbb
+
+  # Restart application after fixing
+  pm2 restart isbvgfuckedup
+  ```
+
+#### Check Data Freshness
+
+Verify the `realtimeDataUpdatedAt` timestamp indicates recent data:
+
+```bash
+# Extract timestamp
+curl -s http://localhost:3000/api/status | jq '.realtimeDataUpdatedAt'
+```
+
+**Expected output:**
+```json
+"2024-01-15T10:30:42.000Z"
+```
+
+**Data freshness validation:**
+
+The `realtimeDataUpdatedAt` timestamp should be:
+- **Recent:** Within the last `STALENESS_THRESHOLD` minutes (default: 10 minutes)
+- **Format:** Valid ISO 8601 timestamp
+- **Timezone:** UTC (indicated by trailing 'Z')
+
+**Check timestamp age:**
+```bash
+# Calculate timestamp age in minutes (requires date command)
+CURRENT_TIME=$(date -u +%s)
+API_TIME=$(curl -s http://localhost:3000/api/status | jq -r '.realtimeDataUpdatedAt' | xargs -I {} date -u -d {} +%s)
+AGE_MINUTES=$(( ($CURRENT_TIME - $API_TIME) / 60 ))
+echo "Data age: $AGE_MINUTES minutes"
+
+# Should be less than STALENESS_THRESHOLD (default: 10 minutes)
+```
+
+**Expected output:**
+```
+Data age: 2 minutes
+```
+
+**Success criteria:**
+- Timestamp age < `STALENESS_THRESHOLD` minutes (check `.env` for configured value)
+- If age exceeds threshold, application should report degraded status
+
+**Troubleshooting stale data:**
+
+- **Timestamp older than threshold** - Data refresh not working:
+  ```bash
+  # Check REFRESH_INTERVAL setting
+  cat .env | grep REFRESH_INTERVAL
+  # Should be: REFRESH_INTERVAL=60000 (60 seconds)
+
+  # Check PM2 logs for refresh errors
+  pm2 logs isbvgfuckedup --lines 50
+
+  # Look for:
+  # - API timeout errors
+  # - Network connectivity issues
+  # - BVG API rate limiting (429 errors)
+  ```
+
+- **Timestamp null or missing** - API integration failure:
+  ```bash
+  # Check full API response
+  curl -s http://localhost:3000/api/status | jq '.'
+
+  # Verify BVG API configuration
+  cat .env | grep BVG_API
+
+  # Restart application
+  pm2 restart isbvgfuckedup
+
+  # Monitor logs for startup errors
+  pm2 logs isbvgfuckedup --lines 100
+  ```
+
+- **Timestamp in future** - Server time misconfiguration:
+  ```bash
+  # Check server time
+  date -u
+
+  # Should match approximately with realtimeDataUpdatedAt
+  # If significantly different, server clock may be wrong
+
+  # Sync server time (requires sudo)
+  sudo ntpdate pool.ntp.org
+  ```
+
+#### Test Rate Limiting Compliance
+
+Verify the application respects BVG API rate limits:
+
+```bash
+# Monitor API request frequency in PM2 logs
+pm2 logs isbvgfuckedup --lines 50 | grep -i "fetching\|refresh"
+
+# Check for rate limit errors
+pm2 logs isbvgfuckedup --lines 200 | grep -i "429\|rate limit"
+```
+
+**Expected behavior:**
+- No 429 (Too Many Requests) errors in logs
+- Requests occur at `REFRESH_INTERVAL` frequency (default: 60 seconds)
+- Logs show successful data fetches
+
+**If rate limiting errors occur:**
+```bash
+# Increase refresh interval
+nano .env
+# Set: REFRESH_INTERVAL=120000 (2 minutes)
+
+# Restart application
+pm2 restart isbvgfuckedup
+
+# Monitor for continued errors
+pm2 logs isbvgfuckedup --lines 50
+```
+
+#### Verify Status Calculation
+
+Test that the application correctly calculates status based on delay thresholds:
+
+```bash
+# Get full status response
+curl -s http://localhost:3000/api/status | jq '{status, stats}'
+```
+
+**Expected output:**
+```json
+{
+  "status": "operational",
+  "stats": {
+    "total": 15,
+    "delayed": 3,
+    "onTime": 12
+  }
+}
+```
+
+**Status values:**
+- `"operational"` - Less than `THRESHOLD_DEGRADED` (30%) of departures delayed
+- `"degraded"` - Between `THRESHOLD_DEGRADED` (30%) and `THRESHOLD_FUCKED` (60%) delayed
+- `"fucked"` - More than `THRESHOLD_FUCKED` (60%) of departures delayed
+
+**Verify thresholds:**
+```bash
+# Check threshold configuration
+cat .env | grep THRESHOLD
+
+# Should show:
+# THRESHOLD_DEGRADED=0.3 (30%)
+# THRESHOLD_FUCKED=0.6 (60%)
+# DELAY_THRESHOLD=5 (minutes)
+```
+
+**Test status calculation logic:**
+```bash
+# Calculate delay percentage from stats
+curl -s http://localhost:3000/api/status | jq '.stats | (.delayed / .total * 100 | floor)'
+
+# Compare with thresholds:
+# < 30% → status should be "operational"
+# 30-60% → status should be "degraded"
+# > 60% → status should be "fucked"
+```
+
+#### Complete BVG API Verification Checklist
+
+Before considering the BVG API integration fully verified, confirm:
+
+- ✅ `/api/status` endpoint responds with valid JSON
+- ✅ `departures` array contains 10+ departure entries
+- ✅ Each departure has `when`, `delay`, `line`, `direction` fields
+- ✅ `realtimeDataUpdatedAt` timestamp is recent (< 10 minutes old)
+- ✅ No 429 rate limiting errors in PM2 logs
+- ✅ `status` field correctly reflects delay percentage
+- ✅ `stats` object shows total, delayed, and onTime counts
+- ✅ Response time consistently < 2 seconds
+- ✅ Data refreshes at configured `REFRESH_INTERVAL`
+- ✅ API works consistently across multiple test requests
+
+**Comprehensive verification test:**
+```bash
+# Run multiple tests in sequence
+echo "=== Testing BVG API Integration ==="
+
+echo "1. Testing API endpoint..."
+curl -s http://localhost:3000/api/status > /tmp/bvg_test.json && echo "✅ API responds"
+
+echo "2. Checking departures array..."
+DEPARTURE_COUNT=$(jq '.departures | length' /tmp/bvg_test.json)
+[ "$DEPARTURE_COUNT" -gt 0 ] && echo "✅ Departures: $DEPARTURE_COUNT" || echo "❌ No departures"
+
+echo "3. Verifying required fields..."
+jq -e '.departures[0] | has("when") and has("delay") and has("line") and has("direction")' /tmp/bvg_test.json > /dev/null && echo "✅ Required fields present" || echo "❌ Missing fields"
+
+echo "4. Checking data freshness..."
+jq -e '.realtimeDataUpdatedAt' /tmp/bvg_test.json > /dev/null && echo "✅ Timestamp present" || echo "❌ Missing timestamp"
+
+echo "5. Verifying status calculation..."
+jq -e '.status and .stats' /tmp/bvg_test.json > /dev/null && echo "✅ Status and stats present" || echo "❌ Missing status/stats"
+
+echo "6. Checking PM2 logs for errors..."
+pm2 logs isbvgfuckedup --lines 50 --nostream | grep -i "error" > /dev/null && echo "⚠️  Errors in logs" || echo "✅ No errors in logs"
+
+echo ""
+echo "=== Full API Response ==="
+jq '.' /tmp/bvg_test.json
+
+rm /tmp/bvg_test.json
+```
+
+This script provides a comprehensive verification of the BVG API integration. All checks should show ✅ for a fully functional deployment.
+
 ## Troubleshooting
 
 ### nvm commands not found
