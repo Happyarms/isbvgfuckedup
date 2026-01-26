@@ -192,6 +192,8 @@ STALENESS_THRESHOLD=10
 
 ### Install Dependencies
 
+Install all required Node.js packages for production:
+
 ```bash
 # Install production dependencies (faster and deterministic)
 npm ci --production
@@ -199,6 +201,50 @@ npm ci --production
 # Verify installation
 npm list --depth=0
 ```
+
+**Why `npm ci --production`?**
+
+- `npm ci` (clean install) is preferred over `npm install` in production because it:
+  - Installs exact versions from `package-lock.json` (deterministic builds)
+  - Removes `node_modules/` folder before install (clean state)
+  - Fails if dependencies don't match lock file (prevents version drift)
+  - Faster than `npm install` in production environments
+
+- `--production` flag:
+  - Skips `devDependencies` (testing, build tools)
+  - Reduces installation time and disk space
+  - Only installs packages needed to run the application
+
+**Expected output:**
+```
+added X packages in Ys
+```
+
+Where X is the number of production dependencies (typically 20-30 packages for this application).
+
+**Troubleshooting dependency installation:**
+
+- **Error: `package-lock.json` missing** - Generate it first:
+  ```bash
+  npm install --package-lock-only
+  npm ci --production
+  ```
+
+- **Error: Node version mismatch** - Ensure Node.js 18 is active:
+  ```bash
+  nvm use 18
+  node --version  # Should show v18.x.x
+  npm ci --production
+  ```
+
+- **Error: Permission denied** - Never use `sudo` with nvm-managed npm:
+  ```bash
+  # Verify npm is from nvm
+  which npm  # Should show ~/.nvm/versions/node/...
+
+  # If needed, reinstall npm
+  npm install -g npm@latest
+  ```
 
 ## Step 3: Configure PM2 Process Manager
 
