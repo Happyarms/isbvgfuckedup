@@ -1944,6 +1944,646 @@ Before considering your deployment complete, verify all items below:
 
 If any checks fail, refer to the relevant verification section above or the Troubleshooting section below for detailed guidance.
 
+## Edge Cases and Known Issues
+
+This section documents edge cases, platform-specific gotchas, and uncommon scenarios you might encounter during deployment.
+
+### konsoleH (Hetzner Hosting Panel) Specific Issues
+
+#### Node.js Activation Disables PHP
+
+**Edge Case:** When using Hetzner's konsoleH panel to activate Node.js for your domain, PHP will be automatically disabled for that domain.
+
+**Impact:**
+- Cannot run PHP and Node.js applications simultaneously on the same domain
+- Existing PHP sites (WordPress, etc.) will stop working
+- `.htaccess` files will be ignored
+
+**Workarounds:**
+1. **Use subdomain:** Deploy Node.js app on `app.yourdomain.com` and keep PHP on main domain
+2. **Reverse proxy:** Manually configure nginx (without konsoleH) to proxy specific paths to Node.js
+3. **Separate domains:** Use different domains for PHP and Node.js applications
+
+**Verification:**
+```bash
+# Test if PHP is disabled
+echo "<?php phpinfo(); ?>" > test.php
+curl https://your-domain.com/test.php
+
+# If Node.js is active via konsoleH, this will not execute PHP
+```
+
+#### konsoleH Reverse Proxy Configuration Conflicts
+
+**Edge Case:** Manual nginx configuration may conflict with konsoleH's automatic reverse proxy setup.
+
+**Symptoms:**
+- Changes to `/etc/nginx/sites-available/` files get overwritten
+- nginx configuration resets after konsoleH panel changes
+- Unexpected 502/503 errors after konsoleH updates
+
+**Solution:**
+```bash
+# Check if konsoleH manages nginx
+ls -l /etc/nginx/sites-enabled/ | grep konsoleh
+
+# If present, use konsoleH panel exclusively for nginx config
+# Avoid manual edits to files managed by konsoleH
+
+# Alternative: Deploy without konsoleH activation
+# Manually configure nginx as documented in Step 4
+```
+
+### Alpine Linux and musl libc Edge Cases
+
+#### Binary Incompatibility with glibc Binaries
+
+**Edge Case:** Pre-built Node.js binaries require glibc, which Alpine Linux doesn't have (uses musl libc instead).
+
+**Symptoms:**
+```bash
+nvm install 18
+# Error: Version '18.x.x' not found
+# Or: Binary incompatibility errors
+
+node --version
+# Error: /lib64/ld-linux-x86-64.so.2: No such file or directory
+```
+
+**Solution:**
+```bash
+# Compile Node.js from source on Alpine
+nvm install -s 18
+
+# This will take 10-30 minutes depending on server specs
+# Monitor compilation progress
+nvm install -s 18 --latest-npm
+
+# Verify compiled version
+node --version  # Should show v18.x.x
+file $(which node)  # Should show "dynamically linked" with musl
+```
+
+**Prevention:**
+```bash
+# Detect Alpine Linux before installation
+cat /etc/os-release | grep -i alpine
+
+# If Alpine, always use -s flag
+if grep -qi alpine /etc/os-release; then
+  nvm install -s 18
+else
+  nvm install 18
+fi
+```
+
+#### npm Native Module Compilation Failures
+
+**Edge Case:** Some npm packages with native extensions fail to compile on Alpine.
+
+**Symptoms:**
+```bash
+npm ci --production
+# Error: gyp ERR! build error
+# Error: make: g++: command not found
+```
+
+**Solution:**
+```bash
+# Install build dependencies on Alpine
+apk add --no-cache python3 make g++
+
+# Then retry npm install
+npm ci --production
+
+# For this specific application (no native modules), this shouldn't occur
+# But keep in mind for future dependencies
+```
+
+### Firewall and Port Access Edge Cases
+
+#### Firewall Blocking External Access
+
+**Edge Case:** Server firewall blocks ports 80/443, preventing external access even though nginx is running.
+
+**Symptoms:**
+- `curl http://localhost:3000` works on server
+- `curl https://your-domain.com` times out from external networks
+- nginx shows no errors in logs
+
+**Diagnosis:**
+```bash
+# Check if firewall is active
+sudo ufw status
+# Or
+sudo iptables -L
+
+# Check if ports are listening
+sudo netstat -tuln | grep -E ':80|:443'
+```
+
+**Solution:**
+```bash
+# Allow HTTP and HTTPS through firewall
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw reload
+
+# Or with iptables
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+sudo iptables-save
+```
+
+#### Hetzner Firewall Rules
+
+**Edge Case:** Hetzner's cloud firewall (separate from server firewall) may block ports.
+
+**Diagnosis:**
+```bash
+# Check Hetzner Cloud Console → Firewalls
+# Or use Hetzner CLI
+hcloud firewall list
+hcloud firewall describe your-firewall-id
+```
+
+**Solution:**
+1. Log into Hetzner Cloud Console
+2. Navigate to Firewalls
+3. Add rules for ports 80 (HTTP) and 443 (HTTPS)
+4. Apply firewall to your server
+
+### DNS and Domain Edge Cases
+
+#### DNS Propagation Delays
+
+**Edge Case:** Domain DNS changes take time to propagate globally (up to 48 hours).
+
+**Symptoms:**
+- HTTPS works from server but not from your local machine
+- `nslookup your-domain.com` returns old IP address
+- Certbot fails with "DNS resolution failed"
+
+**Diagnosis:**
+```bash
+# Check DNS from server
+nslookup your-domain.com
+
+# Check DNS from external resolver
+nslookup your-domain.com 8.8.8.8
+
+# Check DNS propagation globally
+# Use: https://www.whatsmydns.net/
+```
+
+**Workaround:**
+```bash
+# Test using direct IP while DNS propagates
+curl -H "Host: your-domain.com" http://YOUR_SERVER_IP/api/status
+
+# For SSL certificate, wait for DNS to propagate
+# Certbot requires proper DNS resolution
+```
+
+#### CAA Records Blocking Let's Encrypt
+
+**Edge Case:** DNS CAA (Certification Authority Authorization) records prevent Let's Encrypt from issuing certificates.
+
+**Symptoms:**
+```bash
+sudo certbot --nginx -d your-domain.com
+# Error: CAA record for your-domain.com prevents issuance
+```
+
+**Diagnosis:**
+```bash
+# Check CAA records
+dig CAA your-domain.com
+
+# If output shows CAA records not including letsencrypt.org
+```
+
+**Solution:**
+1. Contact your domain registrar
+2. Add or modify CAA record to allow Let's Encrypt:
+   ```
+   your-domain.com. CAA 0 issue "letsencrypt.org"
+   ```
+3. Wait for DNS propagation (5-60 minutes)
+4. Retry Certbot
+
+### Node.js and nvm Edge Cases
+
+#### Multiple nvm Versions Causing Conflicts
+
+**Edge Case:** Multiple nvm installations or mixed system Node.js + nvm Node.js.
+
+**Symptoms:**
+```bash
+which node
+# /usr/bin/node  (system Node.js, not nvm)
+
+npm install -g pm2
+# Error: Permission denied (trying to write to /usr/lib)
+```
+
+**Diagnosis:**
+```bash
+# Check if system Node.js is installed
+dpkg -l | grep nodejs  # Debian/Ubuntu
+rpm -qa | grep nodejs  # CentOS/RHEL
+
+# Check nvm status
+nvm current
+# system (indicates system Node.js is active)
+
+# Check multiple nvm installations
+ls -la ~ | grep nvm
+```
+
+**Solution:**
+```bash
+# Remove system Node.js (if you have sudo)
+sudo apt remove nodejs npm  # Debian/Ubuntu
+sudo yum remove nodejs npm  # CentOS/RHEL
+
+# Ensure nvm is loaded
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Use nvm version
+nvm use 18
+
+# Verify
+which node  # Should point to ~/.nvm/versions/node/...
+```
+
+#### nvm Not Persisting After Shell Restart
+
+**Edge Case:** nvm works in current shell but not after reopening terminal.
+
+**Symptoms:**
+```bash
+# After SSH reconnect
+node --version
+# Command not found
+
+echo $NVM_DIR
+# Empty
+```
+
+**Solution:**
+```bash
+# Check if nvm is in shell config
+grep -i nvm ~/.bashrc ~/.zshrc ~/.profile
+
+# If missing, add to appropriate file
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+
+# For zsh users
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.zshrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.zshrc
+
+# Reload shell configuration
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+### PM2 Edge Cases
+
+#### Multiple PM2 Instances with Same Name
+
+**Edge Case:** Accidentally starting multiple PM2 processes with the same name.
+
+**Symptoms:**
+```bash
+pm2 status
+# Shows multiple "isbvgfuckedup" processes with different IDs
+# Port conflicts, high CPU usage
+
+curl http://localhost:3000
+# Connection refused or inconsistent responses
+```
+
+**Diagnosis:**
+```bash
+# List all PM2 processes
+pm2 list
+
+# Count instances
+pm2 list | grep isbvgfuckedup | wc -l
+```
+
+**Solution:**
+```bash
+# Delete all instances
+pm2 delete all
+
+# Or delete by name (removes all with same name)
+pm2 delete isbvgfuckedup
+
+# Restart with correct configuration
+pm2 start ecosystem.config.js
+
+# Verify only one instance
+pm2 status
+```
+
+#### PM2 God Daemon Not Running
+
+**Edge Case:** PM2 daemon crashes or is killed, leaving applications unmonitored.
+
+**Symptoms:**
+```bash
+pm2 list
+# Error: Could not connect to PM2 daemon
+# Or: Empty list even though process was running
+
+# Application still running but not monitored
+ps aux | grep "node.*server.js"
+# Shows process but PM2 can't see it
+```
+
+**Solution:**
+```bash
+# Resurrect PM2 daemon with saved processes
+pm2 resurrect
+
+# If that fails, restart PM2 daemon
+pm2 kill
+pm2 resurrect
+
+# Or manually restart application
+pm2 start ecosystem.config.js
+
+# Verify
+pm2 status
+```
+
+### BVG API Edge Cases
+
+#### BVG API Service Outage
+
+**Edge Case:** BVG API is down or returns errors, causing stale data.
+
+**Symptoms:**
+```bash
+curl http://localhost:3000/api/status
+# Returns old data with stale realtimeDataUpdatedAt
+
+pm2 logs isbvgfuckedup
+# Error: ENOTFOUND api.vbb.de
+# Or: Error: 503 Service Unavailable
+```
+
+**Mitigation:**
+```bash
+# Application should handle gracefully
+# Check status field
+curl -s http://localhost:3000/api/status | jq '{status, realtimeDataUpdatedAt}'
+
+# Status will show "degraded" or "fucked" based on staleness
+
+# Wait for BVG API to recover
+# Monitor logs
+pm2 logs isbvgfuckedup --lines 50
+
+# If persistent, check BVG API status
+curl https://v6.vbb.transport.rest/
+```
+
+#### BVG API Rate Limiting on Shared IP
+
+**Edge Case:** Other applications on the same server IP are also calling BVG API, causing combined rate limiting.
+
+**Symptoms:**
+- Fresh deployment immediately shows 429 errors
+- `REFRESH_INTERVAL` is already high (120000+)
+- Other users/applications on same server
+
+**Diagnosis:**
+```bash
+# Check for other Node.js processes
+ps aux | grep node
+
+# Check for other applications calling BVG API
+sudo lsof -i -n | grep api.vbb.de
+```
+
+**Solution:**
+```bash
+# Coordinate with other users
+# Or increase refresh interval significantly
+nano .env
+# Set: REFRESH_INTERVAL=300000 (5 minutes)
+
+pm2 restart isbvgfuckedup
+
+# Consider caching responses
+# Or use a dedicated server/IP for your application
+```
+
+### Resource Constraint Edge Cases
+
+#### Low Memory Causing OOM Kills
+
+**Edge Case:** Server has limited RAM (< 1GB), causing Out-Of-Memory kills.
+
+**Symptoms:**
+```bash
+pm2 logs isbvgfuckedup
+# Sudden process termination without error message
+
+dmesg | tail
+# Out of memory: Kill process 12345 (node)
+
+free -h
+# Shows very low available memory
+```
+
+**Solution:**
+```bash
+# Set memory limit for PM2 auto-restart
+pm2 delete isbvgfuckedup
+pm2 start ecosystem.config.js  # Has max_memory_restart: '1G'
+
+# Or reduce PM2 memory usage
+pm2 start src/server.js --name isbvgfuckedup --max-memory-restart 256M
+
+# Add swap space (requires sudo)
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Verify swap is active
+free -h
+```
+
+#### Disk Space Exhaustion from Logs
+
+**Edge Case:** PM2 or nginx logs grow indefinitely, filling disk space.
+
+**Symptoms:**
+```bash
+df -h
+# Shows 100% disk usage
+
+pm2 logs isbvgfuckedup
+# Error: ENOSPC: no space left on device
+```
+
+**Diagnosis:**
+```bash
+# Find large files
+du -sh ~/.pm2/logs/*
+du -sh /var/log/nginx/*
+
+# Check log sizes
+ls -lh logs/
+ls -lh ~/.pm2/logs/
+```
+
+**Solution:**
+```bash
+# Clear old PM2 logs
+pm2 flush
+
+# Manually remove old logs
+rm ~/.pm2/logs/*.log
+rm logs/*.log
+
+# Configure log rotation in ecosystem.config.js
+# (Already configured with max_size: '10M', max_files: 10)
+
+# For nginx, configure log rotation
+sudo nano /etc/logrotate.d/nginx
+
+# Add:
+# /var/log/nginx/*.log {
+#     daily
+#     missingok
+#     rotate 14
+#     compress
+#     delaycompress
+#     notifempty
+#     create 0640 www-data adm
+#     sharedscripts
+#     postrotate
+#         [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+#     endscript
+# }
+```
+
+### Time Synchronization Edge Cases
+
+#### Server Clock Drift Affecting API Data
+
+**Edge Case:** Server system clock is incorrect, causing timestamp issues.
+
+**Symptoms:**
+```bash
+curl -s http://localhost:3000/api/status | jq '.realtimeDataUpdatedAt'
+# Shows timestamp in the future or far past
+
+# BVG API rejects requests
+pm2 logs isbvgfuckedup
+# Error: SSL certificate not yet valid
+# Or: Request timestamp rejected
+```
+
+**Diagnosis:**
+```bash
+# Check server time
+date -u
+
+# Compare with actual UTC time
+# Visit: https://time.is/UTC
+
+# Check time sync status
+timedatectl status  # systemd systems
+```
+
+**Solution:**
+```bash
+# Manually sync time (requires sudo)
+sudo ntpdate pool.ntp.org
+
+# Or use timedatectl
+sudo timedatectl set-ntp true
+
+# Verify time is correct
+date -u
+
+# Restart application to clear cached timestamps
+pm2 restart isbvgfuckedup
+```
+
+### SSL/TLS Edge Cases
+
+#### Let's Encrypt Rate Limits
+
+**Edge Case:** Too many certificate requests in a short time trigger Let's Encrypt rate limits.
+
+**Symptoms:**
+```bash
+sudo certbot --nginx -d your-domain.com
+# Error: too many certificates already issued for exact set of domains
+```
+
+**Rate Limits:**
+- 50 certificates per registered domain per week
+- 5 duplicate certificates per week
+
+**Solution:**
+```bash
+# Wait 7 days for rate limit to reset
+
+# Use staging environment for testing
+sudo certbot --nginx -d your-domain.com --staging
+
+# Once configuration works, get production certificate
+sudo certbot --nginx -d your-domain.com --force-renewal
+
+# Avoid rate limits by testing with --dry-run
+sudo certbot --nginx -d your-domain.com --dry-run
+```
+
+#### Mixed Content Warnings
+
+**Edge Case:** Application loads HTTP resources on HTTPS page, triggering browser warnings.
+
+**Symptoms:**
+- Browser console shows mixed content warnings
+- Some resources fail to load on HTTPS
+- Page shows as "not secure" despite valid certificate
+
+**Diagnosis:**
+```bash
+# Check application code for hard-coded HTTP URLs
+grep -r "http://" src/
+
+# Check HTML output
+curl https://your-domain.com | grep 'http://'
+```
+
+**Solution:**
+```bash
+# Update all URLs to use HTTPS or protocol-relative URLs
+# Edit source files
+nano src/views/index.html
+
+# Change:
+# <script src="http://example.com/script.js"></script>
+# To:
+# <script src="https://example.com/script.js"></script>
+# Or:
+# <script src="//example.com/script.js"></script>
+
+# Restart application
+pm2 restart isbvgfuckedup
+```
+
 ## Troubleshooting
 
 ### nvm commands not found
