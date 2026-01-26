@@ -1567,6 +1567,383 @@ rm /tmp/bvg_test.json
 
 This script provides a comprehensive verification of the BVG API integration. All checks should show ✅ for a fully functional deployment.
 
+## Complete Deployment Verification Checklist
+
+Use this comprehensive checklist to verify your entire deployment is functioning correctly. Work through each section systematically to ensure all components are operational.
+
+### 1. Node.js Installation
+
+Verify Node.js is correctly installed and configured:
+
+```bash
+# Check Node.js version
+node --version
+```
+
+**Expected:** `v18.x.x` (any version starting with v18)
+
+```bash
+# Verify nvm is managing Node.js
+nvm current
+```
+
+**Expected:** `v18.x.x`
+
+```bash
+# Check Node.js path
+which node
+```
+
+**Expected:** `/home/[username]/.nvm/versions/node/v18.x.x/bin/node`
+
+**✅ Success criteria:**
+- Node.js version is 18 or higher
+- nvm is active and managing Node.js
+- Node.js path points to nvm directory
+
+### 2. PM2 Process Manager Status
+
+Verify PM2 is running and managing the application:
+
+```bash
+# Check PM2 status
+pm2 status
+```
+
+**✅ Success criteria:**
+- Application shows status: `online` (not `errored` or `stopped`)
+- Restart count (↺) is low (0-5 restarts)
+- Memory usage is reasonable (< 200MB for this application)
+- CPU usage is low (< 5% when idle)
+
+```bash
+# Check recent logs for errors
+pm2 logs isbvgfuckedup --lines 50 --nostream | grep -i "error"
+```
+
+**✅ Success criteria:**
+- No critical errors in logs
+- No repeated crash/restart messages
+- No "EADDRINUSE" or "Cannot find module" errors
+
+```bash
+# Verify PM2 auto-start is configured
+ls -lh ~/.pm2/dump.pm2
+```
+
+**✅ Success criteria:**
+- File exists and was recently modified
+- PM2 startup configured (check with `pm2 startup`)
+
+### 3. nginx Web Server
+
+Verify nginx is running and properly configured:
+
+```bash
+# Check nginx is running
+sudo systemctl status nginx
+```
+
+**✅ Success criteria:**
+- Status shows: `Active: active (running)`
+- No error messages
+
+```bash
+# Test nginx configuration
+sudo nginx -t
+```
+
+**Expected output:**
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+```bash
+# Verify site configuration exists
+ls -lh /etc/nginx/sites-enabled/ | grep isbvgfuckedup
+```
+
+**✅ Success criteria:**
+- Site configuration is present in sites-enabled
+- Configuration includes proxy_pass to port 3000
+
+### 4. SSL Certificate Validity
+
+Verify SSL/TLS certificate is valid and auto-renewal is configured:
+
+```bash
+# Check certificate status
+sudo certbot certificates
+```
+
+**✅ Success criteria:**
+- Certificate exists for your domain
+- Expiry date is at least 30 days in the future
+- Certificate domains match your configuration
+
+```bash
+# Test auto-renewal
+sudo certbot renew --dry-run
+```
+
+**Expected output:**
+```
+Congratulations, all simulated renewals succeeded
+```
+
+```bash
+# Verify SSL from external client
+curl -vI https://your-domain.com 2>&1 | grep "SSL certificate verify ok"
+```
+
+**✅ Success criteria:**
+- Shows "SSL certificate verify ok"
+- No certificate warnings or errors
+
+### 5. Application External Accessibility
+
+Verify the application is accessible from external networks:
+
+```bash
+# Test HTTPS access (from your local machine, NOT the server)
+curl -I https://your-domain.com
+```
+
+**Expected output includes:**
+```
+HTTP/1.1 200 OK
+Server: nginx
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+X-Powered-By: Express
+```
+
+**✅ Success criteria:**
+- Returns HTTP 200 status code
+- Security headers are present
+- Response time < 2 seconds
+- `X-Powered-By: Express` confirms request reached the application
+
+```bash
+# Test API endpoint
+curl https://your-domain.com/api/status
+```
+
+**✅ Success criteria:**
+- Returns valid JSON response
+- Response includes BVG departure data
+- No connection errors or timeouts
+
+**Browser verification:**
+1. Open `https://your-domain.com` in a web browser
+2. Check for valid certificate (lock icon in address bar)
+3. No browser security warnings
+4. BVG Status Monitor page loads correctly
+
+### 6. BVG API Integration
+
+Verify BVG API is providing real-time departure data:
+
+```bash
+# Test API endpoint and extract key information
+curl -s https://your-domain.com/api/status | jq '{status, realtimeDataUpdatedAt, departureCount: (.departures | length), stats}'
+```
+
+**Expected output:**
+```json
+{
+  "status": "operational",
+  "realtimeDataUpdatedAt": "2024-01-15T10:30:42.000Z",
+  "departureCount": 15,
+  "stats": {
+    "total": 15,
+    "delayed": 3,
+    "onTime": 12
+  }
+}
+```
+
+**✅ Success criteria:**
+- `status` field is present (`operational`, `degraded`, or `fucked`)
+- `realtimeDataUpdatedAt` timestamp is recent (< 10 minutes old)
+- `departureCount` > 0 (at least some departures)
+- `stats` object includes `total`, `delayed`, and `onTime` counts
+
+```bash
+# Check for BVG API errors in logs
+pm2 logs isbvgfuckedup --lines 100 --nostream | grep -i "429\|rate limit\|api error"
+```
+
+**✅ Success criteria:**
+- No 429 (Too Many Requests) errors
+- No API timeout errors
+- No repeated API failures
+
+### 7. Application Logs Health
+
+Verify application logs are clean and showing normal operation:
+
+```bash
+# Check PM2 logs for errors
+pm2 logs isbvgfuckedup --lines 100 --nostream
+```
+
+**✅ Success criteria:**
+- Logs show "Server running on port 3000"
+- No uncaught exceptions or error stack traces
+- No repeated error messages
+- No "ECONNREFUSED" or "ETIMEDOUT" errors
+- Logs show periodic data refresh activity
+
+```bash
+# Check nginx error logs
+sudo tail -n 50 /var/log/nginx/isbvgfuckedup_error.log
+```
+
+**✅ Success criteria:**
+- No 502 Bad Gateway errors
+- No "upstream timed out" errors
+- No "connect() failed" errors
+
+### Complete Verification Summary
+
+Run this comprehensive verification script to check all components:
+
+```bash
+#!/bin/bash
+echo "======================================"
+echo "BVG Status Monitor Deployment Verification"
+echo "======================================"
+echo ""
+
+# 1. Node.js
+echo "1. Node.js Version Check"
+NODE_VERSION=$(node --version 2>&1)
+if [[ $NODE_VERSION == v18* ]]; then
+  echo "   ✅ Node.js: $NODE_VERSION"
+else
+  echo "   ❌ Node.js: $NODE_VERSION (expected v18.x.x)"
+fi
+echo ""
+
+# 2. PM2 Status
+echo "2. PM2 Process Manager"
+PM2_STATUS=$(pm2 jlist 2>&1 | jq -r '.[0].pm2_env.status' 2>/dev/null)
+if [[ $PM2_STATUS == "online" ]]; then
+  echo "   ✅ PM2 Status: online"
+else
+  echo "   ❌ PM2 Status: $PM2_STATUS"
+fi
+echo ""
+
+# 3. nginx
+echo "3. nginx Web Server"
+if sudo systemctl is-active --quiet nginx; then
+  echo "   ✅ nginx: running"
+else
+  echo "   ❌ nginx: not running"
+fi
+echo ""
+
+# 4. SSL Certificate
+echo "4. SSL Certificate"
+SSL_EXPIRY=$(sudo certbot certificates 2>&1 | grep "Expiry Date" | head -n 1 | awk '{print $3}')
+if [[ -n $SSL_EXPIRY ]]; then
+  echo "   ✅ SSL Certificate: valid (expires $SSL_EXPIRY)"
+else
+  echo "   ❌ SSL Certificate: not found or invalid"
+fi
+echo ""
+
+# 5. Application Accessibility
+echo "5. External Application Access"
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://your-domain.com 2>/dev/null)
+if [[ $HTTP_STATUS == "200" ]]; then
+  echo "   ✅ HTTPS Access: $HTTP_STATUS OK"
+else
+  echo "   ❌ HTTPS Access: $HTTP_STATUS"
+fi
+echo ""
+
+# 6. BVG API
+echo "6. BVG API Integration"
+API_STATUS=$(curl -s https://your-domain.com/api/status 2>/dev/null | jq -r '.status' 2>/dev/null)
+DEPARTURE_COUNT=$(curl -s https://your-domain.com/api/status 2>/dev/null | jq '.departures | length' 2>/dev/null)
+if [[ -n $API_STATUS ]] && [[ $DEPARTURE_COUNT -gt 0 ]]; then
+  echo "   ✅ BVG API: $API_STATUS ($DEPARTURE_COUNT departures)"
+else
+  echo "   ❌ BVG API: not responding or no data"
+fi
+echo ""
+
+# 7. Logs
+echo "7. Application Logs"
+ERROR_COUNT=$(pm2 logs isbvgfuckedup --lines 100 --nostream 2>/dev/null | grep -i "error" | wc -l)
+if [[ $ERROR_COUNT -lt 5 ]]; then
+  echo "   ✅ Logs: clean ($ERROR_COUNT errors in last 100 lines)"
+else
+  echo "   ⚠️  Logs: $ERROR_COUNT errors found (review with: pm2 logs isbvgfuckedup)"
+fi
+echo ""
+
+echo "======================================"
+echo "Verification Complete"
+echo "======================================"
+echo ""
+echo "All checks with ✅ indicate successful deployment."
+echo "Any ❌ or ⚠️  should be investigated using the troubleshooting guide."
+```
+
+**To use this verification script:**
+
+1. Save it to a file:
+   ```bash
+   nano ~/verify-deployment.sh
+   ```
+
+2. Make it executable:
+   ```bash
+   chmod +x ~/verify-deployment.sh
+   ```
+
+3. Run the verification:
+   ```bash
+   # Update 'your-domain.com' in the script first
+   ~/verify-deployment.sh
+   ```
+
+### Final Deployment Checklist
+
+Before considering your deployment complete, verify all items below:
+
+- [ ] **Node.js 18+** installed via nvm and set as default
+- [ ] **Application files** deployed to `~/isbvgfuckedup`
+- [ ] **Environment variables** configured in `.env` file
+- [ ] **Dependencies** installed with `npm ci --production`
+- [ ] **PM2 status** shows `online` with low restart count
+- [ ] **PM2 logs** show no critical errors
+- [ ] **PM2 auto-start** configured for server reboots
+- [ ] **nginx running** and configuration passes `nginx -t`
+- [ ] **nginx site** enabled and linked in sites-enabled
+- [ ] **SSL certificate** valid and auto-renewal configured
+- [ ] **HTTPS access** works from external networks
+- [ ] **Security headers** present in HTTP responses
+- [ ] **DNS resolution** points to correct server IP
+- [ ] **API endpoint** returns valid JSON with departure data
+- [ ] **BVG API integration** shows recent data (< 10 min old)
+- [ ] **No rate limiting** errors (429) in application logs
+- [ ] **Status calculation** working correctly based on delays
+- [ ] **Application logs** clean with no repeated errors
+- [ ] **nginx error logs** clean with no 502 errors
+- [ ] **Browser access** shows valid certificate and no warnings
+- [ ] **Crash recovery** tested (PM2 auto-restarts on failure)
+
+**Deployment is complete when all items are checked! ✅**
+
+If any checks fail, refer to the relevant verification section above or the Troubleshooting section below for detailed guidance.
+
 ## Troubleshooting
 
 ### nvm commands not found
