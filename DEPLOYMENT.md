@@ -576,38 +576,295 @@ curl https://your-domain.com/api/status
 curl https://your-domain.com/
 ```
 
-### Check Application Health
+### Verify PM2 Process Manager
+
+After deploying with PM2, thoroughly verify the process manager is correctly managing your application.
+
+#### Check PM2 Status
+
+Verify the application shows as "online" in PM2:
 
 ```bash
-# Verify PM2 status
 pm2 status
-# Expected: isbvgfuckedup shows "online"
+```
 
-# Check for errors in logs
-pm2 logs isbvgfuckedup --lines 100
-# Expected: No error messages, shows "Server running on port 3000"
+**Expected output:**
+```
+┌─────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id  │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├─────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0   │ isbvgfuckedup  │ default     │ 1.0.0   │ fork    │ 12345    │ 5m     │ 0    │ online    │ 0.1%     │ 45.2mb   │ user     │ disabled │
+└─────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+```
 
-# Verify port is listening
-lsof -i :3000
-# Expected: Node process listening on port 3000
+**Success criteria:**
+- **status** column shows `online` (not `errored`, `stopped`, or `launching`)
+- **uptime** shows time since last restart
+- **↺** (restart count) should be low (0-2); high values indicate instability
+- **cpu** and **mem** show reasonable resource usage
 
-# Check process count
+**Troubleshooting PM2 status issues:**
+
+- **Status shows `errored`** - Application crashed during startup:
+  ```bash
+  # Check logs for error details
+  pm2 logs isbvgfuckedup --lines 50
+
+  # Common causes:
+  # - Missing .env file
+  # - Missing dependencies
+  # - Port already in use
+  # - Syntax error in code
+  ```
+
+- **Status shows `stopped`** - Application was manually stopped:
+  ```bash
+  # Restart the application
+  pm2 restart isbvgfuckedup
+  ```
+
+- **Status shows `launching`** - Application stuck during startup:
+  ```bash
+  # Check logs for what it's waiting on
+  pm2 logs isbvgfuckedup --lines 50
+
+  # If stuck for > 30 seconds, restart
+  pm2 restart isbvgfuckedup
+  ```
+
+- **High restart count (↺ > 10)** - Application is crash-looping:
+  ```bash
+  # View recent errors
+  pm2 logs isbvgfuckedup --lines 100 --err
+
+  # Check for:
+  # - Uncaught exceptions
+  # - Memory leaks (mem column growing)
+  # - Database connection failures
+  # - API rate limiting (429 errors)
+  ```
+
+#### Check Application Logs
+
+Verify logs show no errors and application started successfully:
+
+```bash
+pm2 logs isbvgfuckedup --lines 50
+```
+
+**Expected output:**
+```
+0|isbvgfu | BVG Status Monitor starting...
+0|isbvgfu | Environment: production
+0|isbvgfu | Server running on http://localhost:3000
+0|isbvgfu | BVG API: VBB (Berlin & Brandenburg)
+0|isbvgfu | Refresh interval: 60000ms
+```
+
+**Success criteria:**
+- No error stack traces
+- Shows "Server running on port 3000" (or your configured PORT)
+- No repeated crash/restart messages
+- No API errors (404, 429, 500 responses)
+
+**Troubleshooting log issues:**
+
+- **Error: Cannot find module** - Dependencies not installed:
+  ```bash
+  cd ~/isbvgfuckedup
+  npm ci --production
+  pm2 restart isbvgfuckedup
+  ```
+
+- **Error: EADDRINUSE** - Port already in use:
+  ```bash
+  # Find process using the port
+  lsof -i :3000
+
+  # Either kill that process or change PORT in .env
+  nano .env  # Change PORT to 3001
+  pm2 restart isbvgfuckedup
+  ```
+
+- **429 Too Many Requests** - BVG API rate limiting:
+  ```bash
+  # Increase refresh interval in .env
+  nano .env  # Set REFRESH_INTERVAL=120000
+  pm2 restart isbvgfuckedup
+  ```
+
+- **Logs are empty** - PM2 not capturing output:
+  ```bash
+  # Check PM2 log configuration
+  pm2 show isbvgfuckedup
+
+  # Verify log files exist
+  ls -lh logs/
+
+  # Restart PM2 daemon
+  pm2 kill
+  pm2 start ecosystem.config.js
+  ```
+
+#### Verify Application Responds
+
+Test that the application is actually responding to requests:
+
+```bash
+# Test health endpoint
+curl http://localhost:3000/api/status
+```
+
+**Expected output:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "uptime": 300.456,
+  "environment": "production",
+  "nodeVersion": "v18.x.x"
+}
+```
+
+**Success criteria:**
+- Returns valid JSON
+- `status` field is `"ok"`
+- Response time < 1 second
+
+**If curl fails:**
+```bash
+# Verify port is actually listening
+lsof -i :3000 || netstat -tuln | grep 3000
+
+# Check PM2 status again
+pm2 status
+
+# Check process is running
 ps aux | grep "node.*server.js"
 ```
 
-### Test Auto-Restart
+#### Simulate Crash and Auto-Restart
 
-Simulate a crash to verify PM2 auto-restart:
+Test PM2's automatic restart functionality by simulating a crash:
 
 ```bash
-# Kill the Node.js process
-pm2 kill isbvgfuckedup
-
-# Wait a few seconds, then check status
+# Find the Node.js process ID
 pm2 status
-# Expected: isbvgfuckedup should be "online" again
+# Note the PID from the output
 
-# Verify application is accessible
+# Kill the underlying Node.js process (not PM2)
+# Replace XXXXX with the actual PID from pm2 status
+kill -9 XXXXX
+
+# Wait 2-3 seconds for PM2 to detect and restart
+sleep 3
+
+# Check status - should show "online" again
+pm2 status
+```
+
+**Expected behavior:**
+- Within 2-3 seconds, PM2 detects the crash
+- Automatically restarts the application
+- `pm2 status` shows `online` again
+- Restart counter (↺) increments by 1
+
+**Verify application recovered:**
+```bash
+# Test endpoint again
+curl http://localhost:3000/api/status
+
+# Check logs for restart message
+pm2 logs isbvgfuckedup --lines 20
+```
+
+**Expected log output:**
+```
+PM2: App [isbvgfuckedup] exited with code 137
+PM2: App [isbvgfuckedup] starting
+0|isbvgfu | BVG Status Monitor starting...
+0|isbvgfu | Server running on http://localhost:3000
+```
+
+**Alternative crash test using PM2 restart:**
+```bash
+# Graceful restart test
+pm2 restart isbvgfuckedup
+
+# Verify it came back online
+pm2 status
+
+# Check uptime reset to 0s
+pm2 status
+```
+
+**If auto-restart fails:**
+
+- **Status stays `errored`** - Application has a startup error:
+  ```bash
+  # Check logs for the error
+  pm2 logs isbvgfuckedup --lines 100 --err
+
+  # Fix the error, then restart
+  pm2 restart isbvgfuckedup
+  ```
+
+- **PM2 not detecting crash** - PM2 daemon not running:
+  ```bash
+  # Check PM2 is running
+  pm2 list
+
+  # If empty or error, restart PM2
+  pm2 resurrect
+  ```
+
+- **Restart takes > 10 seconds** - Slow startup or resource constraints:
+  ```bash
+  # Check server resources
+  free -h  # Available memory
+  df -h    # Available disk space
+
+  # Check for startup bottlenecks in logs
+  pm2 logs isbvgfuckedup --lines 50
+  ```
+
+#### Verify PM2 Persistence
+
+Ensure PM2 will restart the application after a server reboot:
+
+```bash
+# Check current PM2 startup configuration
+pm2 startup
+
+# Verify process list is saved
+ls -lh ~/.pm2/dump.pm2
+
+# Expected: File should exist and be recently modified
+```
+
+**If dump.pm2 is missing or old:**
+```bash
+# Save current process list
+pm2 save
+
+# Verify it was saved
+ls -lh ~/.pm2/dump.pm2
+cat ~/.pm2/dump.pm2
+```
+
+**Test persistence (requires server reboot or cron simulation):**
+```bash
+# Simulate reboot by killing PM2 daemon and resurrecting
+pm2 kill
+
+# Wait a moment
+sleep 2
+
+# Resurrect saved processes
+pm2 resurrect
+
+# Verify application is running
+pm2 status
 curl http://localhost:3000/api/status
 ```
 
@@ -731,6 +988,256 @@ pm2 startup
 
 # Run the command PM2 outputs
 # Then save process list
+pm2 save
+```
+
+### PM2 Process Manager Issues
+
+#### PM2 shows "online" but application not responding
+
+**Problem:** `pm2 status` shows online but `curl http://localhost:3000` fails
+
+**Diagnosis:**
+```bash
+# Verify the correct port
+pm2 show isbvgfuckedup | grep -A 5 "env:"
+
+# Check if port matches your .env
+cat .env | grep PORT
+
+# Test the actual port PM2 is using
+lsof -i -P -n | grep LISTEN | grep node
+```
+
+**Solution:**
+```bash
+# If port mismatch, update .env
+nano .env  # Set correct PORT
+
+# Restart application
+pm2 restart isbvgfuckedup
+
+# Verify it's listening on correct port
+lsof -i :3000
+```
+
+#### High restart count (crash looping)
+
+**Problem:** `pm2 status` shows restart count (↺) > 10
+
+**Diagnosis:**
+```bash
+# Check error logs only
+pm2 logs isbvgfuckedup --lines 100 --err
+
+# Common crash loop causes:
+# - Uncaught exceptions
+# - Memory exhaustion
+# - Invalid configuration
+# - Missing environment variables
+```
+
+**Solution:**
+```bash
+# For uncaught exceptions - check and fix code
+pm2 logs isbvgfuckedup --lines 200 | grep "Error:"
+
+# For memory issues - increase max_memory_restart
+pm2 delete isbvgfuckedup
+pm2 start ecosystem.config.js  # Has max_memory_restart: '1G'
+
+# For config issues - verify .env
+cat .env
+cp .env.example .env.new  # Compare
+
+# Reset restart counter after fixing
+pm2 reset isbvgfuckedup
+```
+
+#### PM2 logs command shows nothing
+
+**Problem:** `pm2 logs isbvgfuckedup` returns no output
+
+**Diagnosis:**
+```bash
+# Check PM2 configuration
+pm2 show isbvgfuckedup
+
+# Look for log paths in output
+# Check if log directory exists
+ls -lh logs/
+
+# Check if logs are being written
+ls -lh ~/.pm2/logs/
+```
+
+**Solution:**
+```bash
+# If using ecosystem.config.js, verify logs directory
+mkdir -p logs
+
+# Restart application
+pm2 restart isbvgfuckedup
+
+# If still no logs, check PM2 log files directly
+tail -f ~/.pm2/logs/isbvgfuckedup-out.log
+tail -f ~/.pm2/logs/isbvgfuckedup-error.log
+
+# Or check logs configured in ecosystem.config.js
+tail -f logs/pm2-out.log
+tail -f logs/pm2-error.log
+```
+
+#### PM2 command not found after reboot
+
+**Problem:** After server restart, `pm2: command not found`
+
+**Diagnosis:**
+```bash
+# Check if nvm is loaded
+nvm --version
+
+# Check PATH
+echo $PATH | grep nvm
+
+# Check if pm2 exists
+ls -l ~/.nvm/versions/node/v18*/bin/pm2
+```
+
+**Solution:**
+```bash
+# Load nvm manually
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Use correct Node.js version
+nvm use 18
+
+# Verify pm2 is available
+pm2 --version
+
+# If pm2 missing, reinstall
+npm install -g pm2
+
+# For permanent fix, ensure nvm loads in .bashrc or .zshrc
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+```
+
+#### PM2 startup script not running on boot
+
+**Problem:** Server reboots but application doesn't auto-start
+
+**Diagnosis:**
+```bash
+# Check if startup script is configured
+pm2 startup
+
+# Check if process list is saved
+ls -lh ~/.pm2/dump.pm2
+
+# For crontab method (no sudo), verify cron job
+crontab -l | grep pm2
+```
+
+**Solution:**
+
+**Option 1: Using systemd (requires sudo):**
+```bash
+# Remove old startup
+pm2 unstartup
+
+# Generate new startup script
+pm2 startup
+
+# Run the command PM2 outputs (it will look like):
+# sudo env PATH=$PATH:/home/user/.nvm/versions/node/v18.x.x/bin pm2 startup systemd -u user --hp /home/user
+
+# Save process list
+pm2 save
+
+# Test by simulating reboot
+pm2 kill
+pm2 resurrect
+pm2 status
+```
+
+**Option 2: Using crontab (no sudo required):**
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line (update paths for your system):
+# @reboot cd /home/user/isbvgfuckedup && /home/user/.nvm/versions/node/v18.x.x/bin/pm2 resurrect
+
+# Save process list
+pm2 save
+
+# Verify crontab entry
+crontab -l
+```
+
+#### PM2 using too much memory
+
+**Problem:** PM2 process or application consuming excessive memory
+
+**Diagnosis:**
+```bash
+# Check memory usage
+pm2 status  # Look at mem column
+
+# Monitor in real-time
+pm2 monit
+
+# Check if memory is growing (memory leak)
+watch -n 5 'pm2 status'
+```
+
+**Solution:**
+```bash
+# Set memory limit with auto-restart on exceed
+pm2 delete isbvgfuckedup
+pm2 start ecosystem.config.js  # Has max_memory_restart: '1G'
+
+# Or set manually
+pm2 start src/server.js --name isbvgfuckedup --max-memory-restart 500M
+
+# Save configuration
+pm2 save
+
+# Monitor to verify restarts occur before OOM
+pm2 logs isbvgfuckedup
+```
+
+#### PM2 not detecting crashed processes
+
+**Problem:** Application crashes but PM2 doesn't restart it
+
+**Diagnosis:**
+```bash
+# Check if PM2 daemon is running
+pm2 ping
+
+# Check PM2 logs
+pm2 logs
+
+# Verify process is being monitored
+pm2 list
+```
+
+**Solution:**
+```bash
+# Restart PM2 daemon
+pm2 kill
+pm2 resurrect
+
+# Verify application is back
+pm2 status
+
+# If still not working, restart application with PM2
+pm2 start ecosystem.config.js
+
+# Save configuration
 pm2 save
 ```
 
