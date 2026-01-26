@@ -74,6 +74,76 @@ npm --version   # Should show compatible npm version
 nvm install -s 18
 ```
 
+### Verify Node.js Installation
+
+After installing Node.js via nvm, verify the runtime environment is correctly configured:
+
+```bash
+# Check Node.js version
+node --version
+```
+
+**Expected output:**
+```
+v18.x.x
+```
+
+Where `x.x` represents the specific patch version (e.g., v18.19.0). Any version starting with `v18.` is acceptable.
+
+```bash
+# Check npm version
+npm --version
+```
+
+**Expected output:**
+```
+9.x.x or 10.x.x
+```
+
+npm version should be compatible with Node.js 18 (typically npm 9 or 10).
+
+```bash
+# Verify nvm is managing Node.js
+nvm current
+```
+
+**Expected output:**
+```
+v18.x.x
+```
+
+This confirms nvm is active and Node.js 18 is the current version.
+
+```bash
+# Check Node.js path (should point to nvm directory)
+which node
+```
+
+**Expected output:**
+```
+/home/[username]/.nvm/versions/node/v18.x.x/bin/node
+```
+
+**Troubleshooting verification failures:**
+
+- **"command not found: node"** - Node.js not installed or nvm not loaded. Run:
+  ```bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm use 18
+  ```
+
+- **Wrong version displayed** - Different Node.js version active. Switch to Node.js 18:
+  ```bash
+  nvm use 18
+  nvm alias default 18
+  ```
+
+- **npm version incompatible** - Update npm if needed:
+  ```bash
+  npm install -g npm@latest
+  ```
+
 ## Step 2: Deploy Application Files
 
 ### Clone or Upload Project
