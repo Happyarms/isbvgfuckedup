@@ -246,6 +246,89 @@ Where X is the number of production dependencies (typically 20-30 packages for t
   npm install -g npm@latest
   ```
 
+### Verify Application Startup
+
+Before configuring PM2 for production, manually verify the application starts correctly and responds to requests:
+
+```bash
+# Start the application in development mode
+npm start
+```
+
+**Expected output:**
+```
+BVG Status Monitor starting...
+Environment: development
+Server running on http://localhost:3000
+BVG API: VBB (Berlin & Brandenburg)
+Refresh interval: 60000ms
+```
+
+The application will continue running in the foreground. Leave this terminal open.
+
+**Open a new SSH session** to your server and test the health endpoint:
+
+```bash
+# Test the application health endpoint
+curl http://localhost:3000/api/status
+```
+
+**Expected output:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "uptime": 12.456,
+  "environment": "development",
+  "nodeVersion": "v18.x.x"
+}
+```
+
+**Success criteria:**
+- Application starts without errors
+- Health endpoint returns `"status": "ok"`
+- Response includes valid timestamp and uptime
+- No error messages in the console
+
+**To stop the application:**
+
+Return to the first terminal and press `Ctrl+C` to gracefully shut down the application.
+
+**Troubleshooting startup issues:**
+
+- **Error: `Cannot find module 'express'`** - Dependencies not installed:
+  ```bash
+  npm ci --production
+  npm start
+  ```
+
+- **Error: `Port 3000 already in use`** - Another process is using the port:
+  ```bash
+  # Find process using port 3000
+  lsof -i :3000 || netstat -tuln | grep 3000
+
+  # Kill the process or use a different port
+  PORT=3001 npm start
+  ```
+
+- **Error: `.env file not found`** - Environment configuration missing:
+  ```bash
+  cp .env.example .env
+  nano .env  # Configure required variables
+  npm start
+  ```
+
+- **curl returns `Connection refused`** - Application not running or wrong port:
+  ```bash
+  # Verify application is running
+  # Check first terminal for error messages
+
+  # Verify port in .env matches curl request
+  cat .env | grep PORT
+  ```
+
+Once manual startup verification succeeds, proceed to configure PM2 for production deployment.
+
 ## Step 3: Configure PM2 Process Manager
 
 PM2 keeps your application running 24/7, automatically restarts on crashes, and survives server reboots.
