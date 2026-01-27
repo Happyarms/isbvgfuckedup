@@ -337,6 +337,67 @@ main {
   line-height: 1.6;
 }
 
+.disruption-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.disruption-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.disruption-item:first-child {
+  padding-top: 0;
+}
+
+.disruption-line {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.disruption-details {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.disruption-source {
+  margin-top: 0.25rem;
+}
+
+.disruption-source a {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  padding-bottom: 1px;
+  transition: all 0.2s ease;
+}
+
+.disruption-source a:hover {
+  border-bottom-color: var(--color-text);
+  opacity: 0.9;
+}
+
+.disruption-source a:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.disruption-empty {
+  padding: 1rem 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
@@ -396,5 +457,30 @@ main {
 
   .timestamp-section {
     font-size: 0.8rem;
+  }
+
+  .accordion-trigger {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .accordion-panel {
+    padding: 0 1.25rem;
+  }
+
+  .disruption-item {
+    padding: 0.85rem 0;
+  }
+
+  .disruption-line {
+    font-size: 0.95rem;
+  }
+
+  .disruption-details {
+    font-size: 0.85rem;
+  }
+
+  .disruption-source a {
+    font-size: 0.75rem;
   }
 }
