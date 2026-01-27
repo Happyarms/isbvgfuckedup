@@ -71,6 +71,30 @@
           </div>
         </div>
       </div>
+
+      <!-- Train Accordion -->
+      <div class="accordion" id="train-accordion">
+        <button
+          id="train-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="train-accordion-panel"
+          type="button"
+        >
+          Bahnen
+        </button>
+        <div
+          id="train-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="train-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="train-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="timestamp-section" class="timestamp-section" hidden>
