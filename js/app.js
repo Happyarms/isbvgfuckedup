@@ -278,11 +278,25 @@
       dom.busAccordionTrigger.addEventListener('click', function () {
         toggleAccordion(dom.busAccordionTrigger, dom.busAccordionPanel);
       });
+
+      dom.busAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.busAccordionTrigger, dom.busAccordionPanel);
+        }
+      });
     }
 
     if (dom.trainAccordionTrigger && dom.trainAccordionPanel) {
       dom.trainAccordionTrigger.addEventListener('click', function () {
         toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+      });
+
+      dom.trainAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+        }
       });
     }
 
