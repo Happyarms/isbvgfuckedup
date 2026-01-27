@@ -3,7 +3,7 @@
   "spec": "006-accordion-men-mit-details-zu-ausf-llen-und-meldung",
   "state": "building",
   "subtasks": {
-    "completed": 15,
+    "completed": 16,
     "total": 18,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 641,
+    "number": 642,
     "started_at": "2026-01-27T11:09:47.100829"
   },
-  "last_update": "2026-01-27T13:17:04.410272"
+  "last_update": "2026-01-27T13:21:24.458212"
 }
