@@ -304,6 +304,39 @@ main {
   border-bottom-right-radius: 0;
 }
 
+.accordion-panel {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-top: none;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  padding: 0 1.75rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  max-height: 800px;
+  overflow: hidden;
+  transition: max-height var(--transition-speed) ease,
+              padding var(--transition-speed) ease,
+              opacity var(--transition-speed) ease;
+  opacity: 1;
+}
+
+.accordion-panel[hidden] {
+  display: block;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.disruption-list {
+  padding: 1.5rem 0;
+  color: var(--color-text);
+  text-align: left;
+  line-height: 1.6;
+}
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
