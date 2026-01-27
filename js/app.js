@@ -203,6 +203,19 @@
   }
 
   /**
+   * Determine if a disruption is a bus (vs train/subway/tram).
+   * @param {Object} disruption - Disruption object with line information
+   * @returns {boolean} True if the disruption is for a bus line
+   */
+  function isBusDisruption(disruption) {
+    if (!disruption || !disruption.line || !disruption.line.product) {
+      return false;
+    }
+    var product = disruption.line.product.toLowerCase();
+    return product === 'bus';
+  }
+
+  /**
    * Update the page UI with analysis results.
    * @param {Object} result - Output from analyzeStatus()
    */
@@ -234,6 +247,42 @@
 
     // Hide refresh indicator
     dom.refreshIndicator.hidden = true;
+
+    // Mark cancelled disruptions with type
+    var cancelledWithType = (result.cancelled || []).map(function (d) {
+      d.type = 'cancelled';
+      return d;
+    });
+
+    // Mark delayed disruptions with type
+    var delayedWithType = (result.delayed || []).map(function (d) {
+      d.type = 'delayed';
+      return d;
+    });
+
+    // Combine all disruptions
+    var allDisruptions = cancelledWithType.concat(delayedWithType);
+
+    // Filter by bus and train
+    var busDisruptions = allDisruptions.filter(isBusDisruption);
+    var trainDisruptions = allDisruptions.filter(function (d) {
+      return !isBusDisruption(d);
+    });
+
+    // Populate bus accordion
+    if (dom.busDisruptionList) {
+      renderDisruptions(busDisruptions, dom.busDisruptionList, 'mixed');
+    }
+
+    // Populate train accordion
+    if (dom.trainDisruptionList) {
+      renderDisruptions(trainDisruptions, dom.trainDisruptionList, 'mixed');
+    }
+
+    // Show disruptions section if there are any disruptions
+    if (dom.disruptions && allDisruptions.length > 0) {
+      dom.disruptions.hidden = false;
+    }
   }
 
   /**
@@ -279,7 +328,7 @@
    * Render disruption list items into a container element.
    * @param {Array} disruptions - Array of disruption objects (cancelled or delayed)
    * @param {HTMLElement} containerElement - Target DOM element to populate
-   * @param {string} type - Type of disruptions: 'cancelled' or 'delayed'
+   * @param {string} type - Type of disruptions: 'cancelled', 'delayed', or 'mixed'
    */
   function renderDisruptions(disruptions, containerElement, type) {
     // Clear existing content
@@ -315,13 +364,16 @@
         detailsText += 'Richtung ' + disruption.direction;
       }
 
-      if (type === 'delayed' && disruption.delay) {
+      // Determine disruption type from object or parameter
+      var disruptionType = disruption.type || type;
+
+      if (disruptionType === 'delayed' && disruption.delay) {
         var delayMinutes = Math.round(disruption.delay / 60);
         if (detailsText) {
           detailsText += ' — ';
         }
         detailsText += 'Verspätung: ' + delayMinutes + ' Min.';
-      } else if (type === 'cancelled') {
+      } else if (disruptionType === 'cancelled' || !disruption.delay) {
         if (detailsText) {
           detailsText += ' — ';
         }
