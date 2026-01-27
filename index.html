@@ -47,6 +47,30 @@
 
     <section id="disruptions" class="disruptions" hidden>
       <h2 class="disruptions-heading">Ausfälle & Verspätungen</h2>
+
+      <!-- Bus Accordion -->
+      <div class="accordion" id="bus-accordion">
+        <button
+          id="bus-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="bus-accordion-panel"
+          type="button"
+        >
+          Busse
+        </button>
+        <div
+          id="bus-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="bus-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="bus-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="timestamp-section" class="timestamp-section" hidden>
