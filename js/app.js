@@ -139,13 +139,25 @@
     var delayed = [];
 
     departures.forEach(function (dep) {
+      // Extract source URL from remarks if available
+      var sourceUrl = null;
+      if (dep.remarks && Array.isArray(dep.remarks)) {
+        for (var i = 0; i < dep.remarks.length; i++) {
+          if (dep.remarks[i].url) {
+            sourceUrl = dep.remarks[i].url;
+            break;
+          }
+        }
+      }
+
       if (dep.cancelled) {
         cancelledCount++;
         cancelled.push({
           line: dep.line,
           direction: dep.direction,
           when: dep.when,
-          stop: dep.stop
+          stop: dep.stop,
+          sourceUrl: sourceUrl
         });
         return;
       }
@@ -159,7 +171,8 @@
           direction: dep.direction,
           when: dep.when,
           delay: delay,
-          stop: dep.stop
+          stop: dep.stop,
+          sourceUrl: sourceUrl
         });
       }
     });
@@ -382,6 +395,21 @@
 
       detailsElem.textContent = detailsText || 'Keine Details verfügbar';
       item.appendChild(detailsElem);
+
+      // Add source link if available
+      if (disruption.sourceUrl) {
+        var sourceElem = document.createElement('div');
+        sourceElem.className = 'disruption-source';
+
+        var linkElem = document.createElement('a');
+        linkElem.href = disruption.sourceUrl;
+        linkElem.target = '_blank';
+        linkElem.rel = 'noopener noreferrer';
+        linkElem.textContent = 'Quelle: BVG Meldung';
+
+        sourceElem.appendChild(linkElem);
+        item.appendChild(sourceElem);
+      }
 
       containerElement.appendChild(item);
     });
