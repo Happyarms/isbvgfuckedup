@@ -197,10 +197,6 @@
       status = 'degraded';
     }
 
-    // Log disruption details for verification
-    console.log('Cancelled departures:', cancelled);
-    console.log('Delayed departures:', delayed);
-
     return {
       status: status,
       delayPct: delayPct,
