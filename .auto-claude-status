@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "006-accordion-men-mit-details-zu-ausf-llen-und-meldung",
+  "state": "building",
+  "subtasks": {
+    "completed": 17,
+    "total": 18,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Testing & Verification",
+    "id": null,
+    "total": 4
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 643,
+    "started_at": "2026-01-27T11:09:47.100829"
+  },
+  "last_update": "2026-01-27T13:24:27.532369"
+}

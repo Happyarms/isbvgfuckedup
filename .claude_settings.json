@@ -1,0 +1,39 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Write(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Edit(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Glob(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Grep(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Read(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung\\.auto-claude\\specs\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Write(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung\\.auto-claude\\specs\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Edit(C:\\vcs\\isbvgfuckedup\\.auto-claude\\worktrees\\tasks\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung\\.auto-claude\\specs\\006-accordion-men-mit-details-zu-ausf-llen-und-meldung/**)",
+      "Read(C:\\vcs\\isbvgfuckedup\\.auto-claude/**)",
+      "Write(C:\\vcs\\isbvgfuckedup\\.auto-claude/**)",
+      "Edit(C:\\vcs\\isbvgfuckedup\\.auto-claude/**)",
+      "Glob(C:\\vcs\\isbvgfuckedup\\.auto-claude/**)",
+      "Grep(C:\\vcs\\isbvgfuckedup\\.auto-claude/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}

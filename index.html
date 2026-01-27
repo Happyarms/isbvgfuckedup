@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ist die BVG gerade am Arsch? Echtzeit-Status der Berliner Verkehrsbetriebe basierend auf aktuellen Abfahrtsdaten.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Is BVG Fucked Up?">
+  <meta property="og:description" content="Echtzeit-Status der Berliner Verkehrsbetriebe. Verspätungen und Ausfälle auf einen Blick.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_DE">
+
+  <title>Is BVG Fucked Up?</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="status-unknown">
+  <header>
+    <h1>Is BVG Fucked Up?</h1>
+  </header>
+
+  <main>
+    <section id="status-display" aria-live="polite">
+      <div id="loading" class="loading">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p>Lade aktuelle Daten&hellip;</p>
+      </div>
+      <div id="status-answer" class="status-answer" hidden>
+        <p id="status-text" class="status-text"></p>
+        <p id="status-description" class="status-description"></p>
+      </div>
+      <div id="error-message" class="error-message" hidden>
+        <p id="error-text"></p>
+      </div>
+    </section>
+
+    <section id="metrics" class="metrics" hidden>
+      <div class="metric-card">
+        <span class="metric-label">Verspätet</span>
+        <span id="delay-pct" class="metric-value">–</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Ausgefallen</span>
+        <span id="cancel-pct" class="metric-value">–</span>
+      </div>
+    </section>
+
+    <section id="disruptions" class="disruptions" hidden>
+      <h2 class="disruptions-heading">Ausfälle & Verspätungen</h2>
+
+      <!-- Bus Accordion -->
+      <div class="accordion" id="bus-accordion">
+        <button
+          id="bus-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="bus-accordion-panel"
+          type="button"
+        >
+          Busse
+        </button>
+        <div
+          id="bus-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="bus-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="bus-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Train Accordion -->
+      <div class="accordion" id="train-accordion">
+        <button
+          id="train-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="train-accordion-panel"
+          type="button"
+        >
+          Bahnen
+        </button>
+        <div
+          id="train-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="train-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="train-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="timestamp-section" class="timestamp-section" hidden>
+      <time id="last-updated" datetime=""></time>
+      <span id="refresh-indicator" class="refresh-indicator" aria-label="Daten werden aktualisiert" hidden></span>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="noscript-message">
+      <p><strong>JavaScript wird benötigt.</strong></p>
+      <p>Diese Seite benötigt JavaScript, um Echtzeit-Daten der BVG abzurufen und den aktuellen Status anzuzeigen. Bitte aktiviere JavaScript in deinem Browser.</p>
+    </div>
+  </noscript>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
