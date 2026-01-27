@@ -116,7 +116,7 @@
   /**
    * Analyze departure data and determine BVG status.
    * @param {Array} departures - Array of departure objects from VBB API
-   * @returns {Object} Status result with metrics
+   * @returns {Object} Status result with metrics and disruption details
    */
   function analyzeStatus(departures) {
     if (!departures || departures.length === 0) {
@@ -126,17 +126,27 @@
         cancelPct: 0,
         total: 0,
         delayedCount: 0,
-        cancelledCount: 0
+        cancelledCount: 0,
+        cancelled: [],
+        delayed: []
       };
     }
 
     var total = departures.length;
     var cancelledCount = 0;
     var delayedCount = 0;
+    var cancelled = [];
+    var delayed = [];
 
     departures.forEach(function (dep) {
       if (dep.cancelled) {
         cancelledCount++;
+        cancelled.push({
+          line: dep.line,
+          direction: dep.direction,
+          when: dep.when,
+          stop: dep.stop
+        });
         return;
       }
 
@@ -144,6 +154,13 @@
       var delay = dep.delay;
       if (delay && delay > CONFIG.DELAY_THRESHOLD_SECONDS) {
         delayedCount++;
+        delayed.push({
+          line: dep.line,
+          direction: dep.direction,
+          when: dep.when,
+          delay: delay,
+          stop: dep.stop
+        });
       }
     });
 
@@ -158,13 +175,19 @@
       status = 'degraded';
     }
 
+    // Log disruption details for verification
+    console.log('Cancelled departures:', cancelled);
+    console.log('Delayed departures:', delayed);
+
     return {
       status: status,
       delayPct: delayPct,
       cancelPct: cancelPct,
       total: total,
       delayedCount: delayedCount,
-      cancelledCount: cancelledCount
+      cancelledCount: cancelledCount,
+      cancelled: cancelled,
+      delayed: delayed
     };
   }
 
