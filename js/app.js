@@ -526,15 +526,54 @@
       });
     }
 
-    if (dom.trainAccordionTrigger && dom.trainAccordionPanel) {
-      dom.trainAccordionTrigger.addEventListener('click', function () {
-        toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+    if (dom.tramAccordionTrigger && dom.tramAccordionPanel) {
+      dom.tramAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.tramAccordionTrigger, dom.tramAccordionPanel);
       });
 
-      dom.trainAccordionTrigger.addEventListener('keydown', function (event) {
+      dom.tramAccordionTrigger.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+          toggleAccordion(dom.tramAccordionTrigger, dom.tramAccordionPanel);
+        }
+      });
+    }
+
+    if (dom.sbahnAccordionTrigger && dom.sbahnAccordionPanel) {
+      dom.sbahnAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.sbahnAccordionTrigger, dom.sbahnAccordionPanel);
+      });
+
+      dom.sbahnAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.sbahnAccordionTrigger, dom.sbahnAccordionPanel);
+        }
+      });
+    }
+
+    if (dom.ubahnAccordionTrigger && dom.ubahnAccordionPanel) {
+      dom.ubahnAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.ubahnAccordionTrigger, dom.ubahnAccordionPanel);
+      });
+
+      dom.ubahnAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.ubahnAccordionTrigger, dom.ubahnAccordionPanel);
+        }
+      });
+    }
+
+    if (dom.otherAccordionTrigger && dom.otherAccordionPanel) {
+      dom.otherAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.otherAccordionTrigger, dom.otherAccordionPanel);
+      });
+
+      dom.otherAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.otherAccordionTrigger, dom.otherAccordionPanel);
         }
       });
     }
