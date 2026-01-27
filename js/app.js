@@ -275,6 +275,66 @@
     panel.hidden = !newExpandedState;
   }
 
+  /**
+   * Render disruption list items into a container element.
+   * @param {Array} disruptions - Array of disruption objects (cancelled or delayed)
+   * @param {HTMLElement} containerElement - Target DOM element to populate
+   * @param {string} type - Type of disruptions: 'cancelled' or 'delayed'
+   */
+  function renderDisruptions(disruptions, containerElement, type) {
+    // Clear existing content
+    containerElement.innerHTML = '';
+
+    // Handle empty state
+    if (!disruptions || disruptions.length === 0) {
+      var emptyMessage = document.createElement('p');
+      emptyMessage.className = 'disruption-empty';
+      emptyMessage.textContent = 'Keine Ausfälle oder Verspätungen';
+      containerElement.appendChild(emptyMessage);
+      return;
+    }
+
+    // Create list items for each disruption
+    disruptions.forEach(function (disruption) {
+      var item = document.createElement('div');
+      item.className = 'disruption-item';
+
+      // Line number/name
+      var lineElem = document.createElement('div');
+      lineElem.className = 'disruption-line';
+      var lineName = disruption.line && disruption.line.name ? disruption.line.name : 'Unbekannte Linie';
+      lineElem.textContent = lineName;
+      item.appendChild(lineElem);
+
+      // Details (direction and delay information)
+      var detailsElem = document.createElement('div');
+      detailsElem.className = 'disruption-details';
+
+      var detailsText = '';
+      if (disruption.direction) {
+        detailsText += 'Richtung ' + disruption.direction;
+      }
+
+      if (type === 'delayed' && disruption.delay) {
+        var delayMinutes = Math.round(disruption.delay / 60);
+        if (detailsText) {
+          detailsText += ' — ';
+        }
+        detailsText += 'Verspätung: ' + delayMinutes + ' Min.';
+      } else if (type === 'cancelled') {
+        if (detailsText) {
+          detailsText += ' — ';
+        }
+        detailsText += 'Ausfall';
+      }
+
+      detailsElem.textContent = detailsText || 'Keine Details verfügbar';
+      item.appendChild(detailsElem);
+
+      containerElement.appendChild(item);
+    });
+  }
+
   /* ---------- Main Refresh Logic ---------- */
 
   /**
