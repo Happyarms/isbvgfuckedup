@@ -239,6 +239,19 @@
     dom.refreshIndicator.hidden = false;
   }
 
+  /**
+   * Toggle an accordion panel's visibility and update ARIA states.
+   * @param {HTMLElement} trigger - The accordion button element
+   * @param {HTMLElement} panel - The accordion panel element to toggle
+   */
+  function toggleAccordion(trigger, panel) {
+    var isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+    var newExpandedState = !isExpanded;
+
+    trigger.setAttribute('aria-expanded', String(newExpandedState));
+    panel.hidden = !newExpandedState;
+  }
+
   /* ---------- Main Refresh Logic ---------- */
 
   /**
@@ -260,6 +273,19 @@
   /* ---------- Initialization ---------- */
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Set up accordion event listeners
+    if (dom.busAccordionTrigger && dom.busAccordionPanel) {
+      dom.busAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.busAccordionTrigger, dom.busAccordionPanel);
+      });
+    }
+
+    if (dom.trainAccordionTrigger && dom.trainAccordionPanel) {
+      dom.trainAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+      });
+    }
+
     refreshStatus();
     setInterval(refreshStatus, CONFIG.REFRESH_INTERVAL_MS);
   });
