@@ -351,7 +351,7 @@
     if (!disruptions || disruptions.length === 0) {
       var emptyMessage = document.createElement('p');
       emptyMessage.className = 'disruption-empty';
-      emptyMessage.textContent = 'Keine Ausfälle oder Verspätungen';
+      emptyMessage.textContent = 'Keine Ausfälle/Verspätungen';
       containerElement.appendChild(emptyMessage);
       return;
     }
