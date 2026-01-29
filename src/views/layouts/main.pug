@@ -24,6 +24,13 @@ html(lang="de")
     link(rel="stylesheet", href="/css/style.css")
 
   body(class=bodyClass || '')
+    //- Theme toggle button (positioned in corner via CSS)
+    button.theme-toggle(
+      type="button"
+      aria-label="Farbschema umschalten"
+      title="Farbschema umschalten"
+    ) ☀️
+
     .container
       block content
 
