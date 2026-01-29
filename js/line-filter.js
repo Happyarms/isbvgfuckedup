@@ -39,17 +39,59 @@
     return lineNames;
   }
 
+  /* ---------- Filtering ---------- */
+
+  /**
+   * Filter departures by selected line names.
+   * If selectedLines is empty or not provided, returns all departures.
+   * @param {Array} departures - Array of departure objects from VBB API
+   * @param {Array<string>} selectedLines - Array of line names to filter by (e.g., ['U8', 'S1'])
+   * @returns {Array} Filtered array of departures
+   */
+  function filterByLines(departures, selectedLines) {
+    // Return empty array if departures is invalid
+    if (!departures || !Array.isArray(departures)) {
+      return [];
+    }
+
+    // If no filters selected, return all departures
+    if (!selectedLines || !Array.isArray(selectedLines) || selectedLines.length === 0) {
+      return departures;
+    }
+
+    // Create a set for faster lookup
+    var selectedLinesSet = {};
+    selectedLines.forEach(function (lineName) {
+      selectedLinesSet[lineName] = true;
+    });
+
+    // Filter departures by selected lines
+    var filtered = [];
+    departures.forEach(function (departure) {
+      if (departure && departure.line && departure.line.name) {
+        var lineName = departure.line.name;
+        if (selectedLinesSet[lineName]) {
+          filtered.push(departure);
+        }
+      }
+    });
+
+    return filtered;
+  }
+
   /* ---------- Exports ---------- */
 
   // Export for use in other modules (Node.js/testing) or browser
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-      extractUniqueLines: extractUniqueLines
+      extractUniqueLines: extractUniqueLines,
+      filterByLines: filterByLines
     };
   } else {
     // Browser global
     window.LineFilter = {
-      extractUniqueLines: extractUniqueLines
+      extractUniqueLines: extractUniqueLines,
+      filterByLines: filterByLines
     };
   }
 })();
