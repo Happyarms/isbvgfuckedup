@@ -97,6 +97,44 @@ The deployment guide covers:
 - Troubleshooting common deployment issues
 - Production environment configuration
 
+## GitHub Actions Deployment
+
+This project uses GitHub Actions for continuous integration and deployment. To enable automatic deployments, configure the following secrets in your GitHub repository settings (`Settings → Secrets and variables → Actions → New repository secret`):
+
+### Required GitHub Secrets
+
+| Secret Name | Description | Example |
+|-------------|-------------|---------|
+| `DEPLOY_SSH_KEY` | SSH private key for authentication to production server | Contents of `~/.ssh/id_rsa` or `~/.ssh/id_ed25519` |
+| `DEPLOY_HOST` | Production server hostname or IP address | `example.com` or `192.168.1.100` |
+| `DEPLOY_USER` | SSH username for deployment | `deploy` or `ubuntu` |
+| `DEPLOY_PATH` | Absolute path to application directory on server | `/home/deploy/isbvgfuckedup` |
+
+### Setting Up Deployment
+
+1. **Generate SSH key pair** (if you don't have one):
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy_key
+   ```
+
+2. **Add public key to server**:
+   ```bash
+   ssh-copy-id -i ~/.ssh/github_deploy_key.pub user@your-server.com
+   # Or manually append to ~/.ssh/authorized_keys on the server
+   ```
+
+3. **Add secrets to GitHub**:
+   - Navigate to your repository on GitHub
+   - Go to `Settings → Secrets and variables → Actions`
+   - Click `New repository secret` for each of the secrets listed above
+   - For `DEPLOY_SSH_KEY`, paste the **entire private key** contents (including `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----`)
+
+4. **Trigger deployment**:
+   - Push to `main` branch (after CI passes)
+   - Or manually trigger from `Actions → CD → Run workflow`
+
+**Note**: The deployment workflow automatically waits for CI checks to pass before deploying. Ensure your production server has the deployment script at `scripts/deploy.sh` as documented in [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Development
 
 ### Available Scripts
