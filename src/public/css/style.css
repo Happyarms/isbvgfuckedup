@@ -54,6 +54,54 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Manual Theme Override – data-theme attribute                       */
+/* ------------------------------------------------------------------ */
+
+/* Force light theme when data-theme='light' is set on html element */
+html[data-theme='light'] {
+  /* Light theme colors (same as default :root) */
+  --color-text: #fff;
+  --color-bg-default: #333;
+
+  /* Status backgrounds */
+  --color-status-fine: #27ae60;
+  --color-status-degraded: #e67e22;
+  --color-status-fucked: #c0392b;
+  --color-status-unknown: #7f8c8d;
+
+  /* Overlay colors */
+  --color-overlay-light: rgba(255, 255, 255, 0.15);
+  --color-overlay-dark: rgba(0, 0, 0, 0.25);
+
+  /* Shadow colors */
+  --shadow-light: rgba(0, 0, 0, 0.15);
+  --shadow-medium: rgba(0, 0, 0, 0.2);
+  --shadow-heavy: rgba(0, 0, 0, 0.3);
+}
+
+/* Force dark theme when data-theme='dark' is set on html element */
+html[data-theme='dark'] {
+  /* Dark theme colors */
+  --color-text: #fff;
+  --color-bg-default: #1a1a1a;
+
+  /* Status backgrounds (slightly adjusted for dark mode) */
+  --color-status-fine: #27ae60;
+  --color-status-degraded: #e67e22;
+  --color-status-fucked: #c0392b;
+  --color-status-unknown: #7f8c8d;
+
+  /* Overlay colors */
+  --color-overlay-light: rgba(255, 255, 255, 0.1);
+  --color-overlay-dark: rgba(0, 0, 0, 0.35);
+
+  /* Shadow colors */
+  --shadow-light: rgba(0, 0, 0, 0.25);
+  --shadow-medium: rgba(0, 0, 0, 0.35);
+  --shadow-heavy: rgba(0, 0, 0, 0.45);
+}
+
+/* ------------------------------------------------------------------ */
 /* Reset & Base                                                       */
 /* ------------------------------------------------------------------ */
 
