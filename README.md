@@ -1,5 +1,7 @@
 # BVG Status Monitor
 
+[![CI Status](https://github.com/Happyarms/isbvgfuckedup/actions/workflows/ci.yml/badge.svg)](https://github.com/Happyarms/isbvgfuckedup/actions/workflows/ci.yml)
+
 A real-time status monitoring application for Berlin's public transportation system (BVG). This Express.js application tracks departure delays and service disruptions using the VBB HAFAS API, providing both a web interface and JSON API endpoint.
 
 ## Features
