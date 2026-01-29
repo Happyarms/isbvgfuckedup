@@ -126,6 +126,7 @@ body {
   background: var(--color-bg-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ------------------------------------------------------------------ */
@@ -244,6 +245,7 @@ body.status-unknown {
   background: var(--color-overlay-light);
   border-radius: 8px;
   min-width: 120px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .metric-value {
@@ -274,6 +276,7 @@ body.status-unknown {
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.05em;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ------------------------------------------------------------------ */
