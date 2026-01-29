@@ -74,8 +74,8 @@ body {
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  color: #fff;
-  background: #333;
+  color: var(--color-text);
+  background: var(--color-bg-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -85,19 +85,19 @@ body {
 /* ------------------------------------------------------------------ */
 
 body.status-fine {
-  background: #27ae60;
+  background: var(--color-status-fine);
 }
 
 body.status-degraded {
-  background: #e67e22;
+  background: var(--color-status-degraded);
 }
 
 body.status-fucked {
-  background: #c0392b;
+  background: var(--color-status-fucked);
 }
 
 body.status-unknown {
-  background: #7f8c8d;
+  background: var(--color-status-unknown);
 }
 
 /* ------------------------------------------------------------------ */
@@ -160,16 +160,16 @@ body.status-unknown {
 /* Status-specific text enhancements (applied via class on .status) */
 
 .status.status-fine .status-text {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  text-shadow: 0 2px 4px var(--shadow-light);
 }
 
 .status.status-degraded .status-text {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 4px var(--shadow-medium);
 }
 
 .status.status-fucked .status-text {
   font-size: 3.5rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px var(--shadow-heavy);
 }
 
 .status.status-unknown .status-text {
@@ -193,7 +193,7 @@ body.status-unknown {
   flex-direction: column;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-overlay-light);
   border-radius: 8px;
   min-width: 120px;
 }
@@ -221,7 +221,7 @@ body.status-unknown {
   display: inline-block;
   padding: 0.5rem 1rem;
   margin-bottom: 1.5rem;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--color-overlay-dark);
   border-radius: 4px;
   font-size: 0.9rem;
   font-weight: 600;
