@@ -3,6 +3,8 @@
  *
  * Follows the IsSeptaFcked pattern: simple page reload for refresh.
  * Auto-refreshes the page every 60 seconds with a visible countdown.
+ *
+ * Also handles dark mode theme detection and initialization.
  */
 
 (function () {
@@ -11,6 +13,39 @@
   const REFRESH_INTERVAL = 60;
   let secondsRemaining = REFRESH_INTERVAL;
   let timerInterval = null;
+
+  /**
+   * Get the user's preferred theme.
+   * Checks localStorage first, then falls back to system preference.
+   * @returns {string} 'light' or 'dark'
+   */
+  function getPreferredTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+
+    // Fall back to system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    return prefersDark.matches ? 'dark' : 'light';
+  }
+
+  /**
+   * Apply the theme by setting the data-theme attribute on the html element.
+   * @param {string} theme - 'light' or 'dark'
+   */
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  /**
+   * Initialize the theme on page load.
+   * Called immediately to avoid flash of wrong theme.
+   */
+  function initTheme() {
+    const theme = getPreferredTheme();
+    applyTheme(theme);
+  }
 
   /**
    * Find the refresh indicator element and update its text with the countdown.
@@ -48,7 +83,10 @@
     timerInterval = setInterval(tick, 1000);
   }
 
-  /* Kick off once the DOM is ready */
+  /* Initialize theme immediately to avoid flash */
+  initTheme();
+
+  /* Kick off timer once the DOM is ready */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startTimer);
   } else {
