@@ -48,6 +48,17 @@
   }
 
   /**
+   * Toggle between light and dark themes.
+   * Saves the preference to localStorage and applies the theme.
+   */
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+  }
+
+  /**
    * Find the refresh indicator element and update its text with the countdown.
    */
   function updateCountdown() {
