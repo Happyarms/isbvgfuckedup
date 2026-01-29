@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ist die BVG gerade am Arsch? Echtzeit-Status der Berliner Verkehrsbetriebe basierend auf aktuellen Abfahrtsdaten.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Is BVG Fucked Up?">
+  <meta property="og:description" content="Echtzeit-Status der Berliner Verkehrsbetriebe. Verspätungen und Ausfälle auf einen Blick.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_DE">
+
+  <title>Is BVG Fucked Up?</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="status-unknown">
+  <header>
+    <h1>Is BVG Fucked Up?</h1>
+  </header>
+
+  <main>
+    <!-- Line Filter Section -->
+    <section id="line-filter" class="line-filter" hidden>
+      <h2 class="filter-heading">Linien filtern</h2>
+
+      <div class="filter-controls">
+        <div class="filter-select-container">
+          <label for="line-select" class="filter-label">
+            Wähle Linien aus:
+          </label>
+          <select
+            id="line-select"
+            class="line-select"
+            multiple
+            size="5"
+            aria-label="Wähle eine oder mehrere Linien zum Filtern"
+            aria-describedby="filter-description"
+          >
+            <!-- Populated dynamically via JavaScript -->
+          </select>
+          <p id="filter-description" class="filter-description">
+            Halte Strg (Windows) oder Cmd (Mac) gedrückt, um mehrere Linien auszuwählen.
+          </p>
+        </div>
+
+        <button
+          id="filter-reset"
+          class="filter-reset-button"
+          type="button"
+          aria-label="Alle Filter zurücksetzen"
+        >
+          Alle Filter zurücksetzen
+        </button>
+      </div>
+
+      <div
+        id="active-filters"
+        class="active-filters"
+        role="region"
+        aria-label="Aktive Filter"
+        aria-live="polite"
+      >
+        <!-- Active filter chips populated dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <section id="status-display" aria-live="polite">
+      <div id="loading" class="loading">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p>Lade aktuelle Daten&hellip;</p>
+      </div>
+      <div id="status-answer" class="status-answer" hidden>
+        <p id="status-text" class="status-text"></p>
+        <p id="status-description" class="status-description"></p>
+      </div>
+      <div id="error-message" class="error-message" hidden>
+        <p id="error-text"></p>
+      </div>
+    </section>
+
+    <section id="metrics" class="metrics" hidden>
+      <div class="metric-card">
+        <span class="metric-label">Verspätet</span>
+        <span id="delay-pct" class="metric-value">–</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Ausgefallen</span>
+        <span id="cancel-pct" class="metric-value">–</span>
+      </div>
+    </section>
+
+    <section id="disruptions" class="disruptions" hidden>
+      <h2 class="disruptions-heading">Ausfälle & Verspätungen</h2>
+
+      <!-- Bus Accordion -->
+      <div class="accordion" id="bus-accordion">
+        <button
+          id="bus-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="bus-accordion-panel"
+          type="button"
+        >
+          Busse
+        </button>
+        <div
+          id="bus-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="bus-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="bus-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tram Accordion -->
+      <div class="accordion" id="tram-accordion">
+        <button
+          id="tram-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="tram-accordion-panel"
+          type="button"
+        >
+          Tram
+        </button>
+        <div
+          id="tram-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="tram-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="tram-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- S-Bahn Accordion -->
+      <div class="accordion" id="sbahn-accordion">
+        <button
+          id="sbahn-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="sbahn-accordion-panel"
+          type="button"
+        >
+          S-Bahn
+        </button>
+        <div
+          id="sbahn-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="sbahn-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="sbahn-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- U-Bahn Accordion -->
+      <div class="accordion" id="ubahn-accordion">
+        <button
+          id="ubahn-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="ubahn-accordion-panel"
+          type="button"
+        >
+          U-Bahn
+        </button>
+        <div
+          id="ubahn-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="ubahn-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="ubahn-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Sonstige Accordion -->
+      <div class="accordion" id="other-accordion">
+        <button
+          id="other-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="other-accordion-panel"
+          type="button"
+        >
+          Sonstige
+        </button>
+        <div
+          id="other-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="other-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="other-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="timestamp-section" class="timestamp-section" hidden>
+      <time id="last-updated" datetime=""></time>
+      <span id="refresh-indicator" class="refresh-indicator" aria-label="Daten werden aktualisiert" hidden></span>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="noscript-message">
+      <p><strong>JavaScript wird benötigt.</strong></p>
+      <p>Diese Seite benötigt JavaScript, um Echtzeit-Daten der BVG abzurufen und den aktuellen Status anzuzeigen. Bitte aktiviere JavaScript in deinem Browser.</p>
+    </div>
+  </noscript>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
