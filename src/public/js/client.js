@@ -59,6 +59,34 @@
   }
 
   /**
+   * Initialize listener for system preference changes.
+   * Only updates theme if user hasn't set a manual preference.
+   */
+  function initSystemPreferenceListener() {
+    const prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    /**
+     * Handle system preference changes.
+     * @param {MediaQueryListEvent} e - The media query event
+     */
+    function handleSystemPreferenceChange(e) {
+      // Only apply system preference if user hasn't set a manual preference
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme) {
+        const newTheme = e.matches ? 'dark' : 'light';
+        applyTheme(newTheme);
+      }
+    }
+
+    // Use addEventListener if available, otherwise use addListener for older browsers
+    if (prefersDarkQuery.addEventListener) {
+      prefersDarkQuery.addEventListener('change', handleSystemPreferenceChange);
+    } else if (prefersDarkQuery.addListener) {
+      prefersDarkQuery.addListener(handleSystemPreferenceChange);
+    }
+  }
+
+  /**
    * Find the refresh indicator element and update its text with the countdown.
    */
   function updateCountdown() {
@@ -96,6 +124,9 @@
 
   /* Initialize theme immediately to avoid flash */
   initTheme();
+
+  /* Set up system preference change listener */
+  initSystemPreferenceListener();
 
   /* Kick off timer once the DOM is ready */
   if (document.readyState === 'loading') {
