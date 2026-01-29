@@ -1,0 +1,376 @@
+/**
+ * BVG Status Page Stylesheet
+ *
+ * Follows the IsSeptaFcked CSS pattern: bold, full-viewport status display
+ * with status-specific background colors. Centered text, responsive layout.
+ */
+
+/* ------------------------------------------------------------------ */
+/* CSS Custom Properties – Light & Dark Theme Support                 */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Light theme colors (default) */
+  --color-text: #fff;
+  --color-bg-default: #333;
+
+  /* Status backgrounds */
+  --color-status-fine: #27ae60;
+  --color-status-degraded: #e67e22;
+  --color-status-fucked: #c0392b;
+  --color-status-unknown: #7f8c8d;
+
+  /* Overlay colors */
+  --color-overlay-light: rgba(255, 255, 255, 0.15);
+  --color-overlay-dark: rgba(0, 0, 0, 0.25);
+
+  /* Shadow colors */
+  --shadow-light: rgba(0, 0, 0, 0.15);
+  --shadow-medium: rgba(0, 0, 0, 0.2);
+  --shadow-heavy: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark theme colors */
+    --color-text: #fff;
+    --color-bg-default: #1a1a1a;
+
+    /* Status backgrounds (slightly adjusted for dark mode) */
+    --color-status-fine: #27ae60;
+    --color-status-degraded: #e67e22;
+    --color-status-fucked: #c0392b;
+    --color-status-unknown: #7f8c8d;
+
+    /* Overlay colors */
+    --color-overlay-light: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.35);
+
+    /* Shadow colors */
+    --shadow-light: rgba(0, 0, 0, 0.25);
+    --shadow-medium: rgba(0, 0, 0, 0.35);
+    --shadow-heavy: rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset & Base                                                       */
+/* ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  color: #fff;
+  background: #333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status-specific body backgrounds (set via bodyClass in Pug)        */
+/* ------------------------------------------------------------------ */
+
+body.status-fine {
+  background: #27ae60;
+}
+
+body.status-degraded {
+  background: #e67e22;
+}
+
+body.status-fucked {
+  background: #c0392b;
+}
+
+body.status-unknown {
+  background: #7f8c8d;
+}
+
+/* ------------------------------------------------------------------ */
+/* Container – full-viewport, centered content                        */
+/* ------------------------------------------------------------------ */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status container – holds all page content                          */
+/* ------------------------------------------------------------------ */
+
+.status-container {
+  max-width: 800px;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Site title                                                         */
+/* ------------------------------------------------------------------ */
+
+.site-title {
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status display – bold, prominent status message                    */
+/* ------------------------------------------------------------------ */
+
+.status {
+  margin-bottom: 2.5rem;
+}
+
+.status-emoji {
+  display: block;
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.status-text {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+/* Status-specific text enhancements (applied via class on .status) */
+
+.status.status-fine .status-text {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.status.status-degraded .status-text {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status.status-fucked .status-text {
+  font-size: 3.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status.status-unknown .status-text {
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------------------------ */
+/* Metrics section                                                    */
+/* ------------------------------------------------------------------ */
+
+.metrics {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  min-width: 120px;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.85;
+  margin-top: 0.25rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Staleness warning                                                  */
+/* ------------------------------------------------------------------ */
+
+.stale-warning {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer info – timestamp and refresh indicator                      */
+/* ------------------------------------------------------------------ */
+
+.footer-info {
+  margin-top: 1rem;
+  opacity: 0.7;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.timestamp {
+  margin-bottom: 0.25rem;
+}
+
+.refresh-indicator {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* ------------------------------------------------------------------ */
+/* Error page                                                         */
+/* ------------------------------------------------------------------ */
+
+.error-details {
+  margin-top: 1.5rem;
+}
+
+.error-message {
+  font-size: 1.1rem;
+  opacity: 0.85;
+  margin-bottom: 1rem;
+}
+
+.error-details a {
+  color: #fff;
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.error-details a:hover {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive – tablets (max-width: 768px)                            */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .site-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .status-emoji {
+    font-size: 3rem;
+  }
+
+  .status-text {
+    font-size: 2.2rem;
+  }
+
+  .status.status-fucked .status-text {
+    font-size: 2.5rem;
+  }
+
+  .metrics {
+    gap: 1rem;
+  }
+
+  .metric {
+    padding: 0.75rem 1rem;
+    min-width: 100px;
+  }
+
+  .metric-value {
+    font-size: 1.6rem;
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive – phones (max-width: 480px)                             */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .site-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .status-emoji {
+    font-size: 2.5rem;
+  }
+
+  .status-text {
+    font-size: 1.8rem;
+  }
+
+  .status.status-fucked .status-text {
+    font-size: 2rem;
+  }
+
+  .status {
+    margin-bottom: 1.5rem;
+  }
+
+  .metrics {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .metric {
+    width: 100%;
+    max-width: 200px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.4rem;
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+    margin-top: 0;
+  }
+
+  .footer-info {
+    font-size: 0.75rem;
+  }
+}
