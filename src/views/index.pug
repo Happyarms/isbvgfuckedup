@@ -73,3 +73,26 @@ block content
       if timestamp
         .timestamp Zuletzt aktualisiert: #{timestamp}
       .refresh-indicator Automatische Aktualisierung alle 60 Sekunden
+
+  //- Initialize transit boxes with server-rendered data
+  script.
+    (function() {
+      // Embedded departures data from server
+      var departures = !{JSON.stringify(departures || [])};
+
+      // Wait for DOM and app.js to be ready
+      function initTransitBoxes() {
+        if (typeof window.aggregateDisruptionsByType === 'function' &&
+            typeof window.updateTransitBoxes === 'function') {
+          var aggregated = window.aggregateDisruptionsByType(departures);
+          window.updateTransitBoxes(aggregated);
+        }
+      }
+
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTransitBoxes);
+      } else {
+        initTransitBoxes();
+      }
+    })();

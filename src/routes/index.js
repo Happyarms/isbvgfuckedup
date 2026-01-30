@@ -45,6 +45,7 @@ export function createRoutes(poller) {
       metrics: status.metrics,
       stale: status.stale,
       timestamp,
+      departures: status.departures || [],
     });
   });
 

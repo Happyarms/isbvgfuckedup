@@ -31,6 +31,7 @@ function unknownStatus() {
     state,
     metrics,
     text,
+    departures: [],
     timestamp: null,
     stale: true,
   };
@@ -97,6 +98,7 @@ export function createPoller(overrides = {}) {
         state,
         metrics,
         text,
+        departures: allDepartures,
         timestamp: Date.now(),
         stale: false,
       };
