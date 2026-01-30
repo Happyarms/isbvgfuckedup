@@ -488,14 +488,18 @@ body.status-unknown {
     font-size: 0.75rem;
   }
 
-  /* Transit boxes – reduce sizing on tablets */
+  /* Transit boxes – 2x2 grid layout on tablets */
   .transit-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
 
   .transit-box {
     padding: 1.25rem 1rem;
-    min-width: 120px;
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
   }
 
   .transit-type {
