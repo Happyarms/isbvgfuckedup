@@ -19,7 +19,7 @@ const CONFIG = {
  * @param {Array} departures - Array of departure objects from VBB API
  * @returns {Object} Status result with metrics and disruption details
  */
-export function analyzeStatus(departures) {
+function analyzeStatus(departures) {
   if (!departures || departures.length === 0) {
     return {
       status: 'unknown',
@@ -108,7 +108,7 @@ export function analyzeStatus(departures) {
  * @param {number} value - Decimal value (0-1)
  * @returns {string} Formatted percentage (e.g. "42%")
  */
-export function formatPct(value) {
+function formatPct(value) {
   return Math.round(value * 100) + '%';
 }
 
@@ -117,7 +117,7 @@ export function formatPct(value) {
  * @param {Object} disruption - Disruption object with line information
  * @returns {boolean} True if the disruption is for a bus line
  */
-export function isBusDisruption(disruption) {
+function isBusDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
@@ -130,7 +130,7 @@ export function isBusDisruption(disruption) {
  * @param {Object} disruption - Disruption object with line information
  * @returns {boolean} True if the disruption is for a tram line
  */
-export function isTramDisruption(disruption) {
+function isTramDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
@@ -143,7 +143,7 @@ export function isTramDisruption(disruption) {
  * @param {Object} disruption - Disruption object with line information
  * @returns {boolean} True if the disruption is for a S-Bahn line
  */
-export function isSBahnDisruption(disruption) {
+function isSBahnDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
@@ -156,7 +156,7 @@ export function isSBahnDisruption(disruption) {
  * @param {Object} disruption - Disruption object with line information
  * @returns {boolean} True if the disruption is for a U-Bahn line
  */
-export function isUBahnDisruption(disruption) {
+function isUBahnDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
@@ -170,7 +170,7 @@ export function isUBahnDisruption(disruption) {
  * @param {Object} disruption - Disruption object with line information
  * @returns {boolean} True if the disruption is for other transit types or unknown
  */
-export function isOtherDisruption(disruption) {
+function isOtherDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return true;
   }
@@ -187,7 +187,7 @@ export function isOtherDisruption(disruption) {
  * @param {HTMLElement} container - DOM element to render into
  * @param {string} type - Type of disruption: 'cancelled' or 'delayed'
  */
-export function renderDisruptions(disruptions, container, type) {
+function renderDisruptions(disruptions, container, type) {
   if (!container) {
     return;
   }
@@ -245,7 +245,7 @@ export function renderDisruptions(disruptions, container, type) {
  * @param {Response} response - Fetch API response object
  * @returns {Promise<Object>} Parsed JSON data
  */
-export function parseAPIResponse(response) {
+function parseAPIResponse(response) {
   if (!response) {
     throw new Error('Response is null or undefined');
   }
@@ -267,7 +267,7 @@ export function parseAPIResponse(response) {
  * @param {Array} departures - Raw departure data from API
  * @returns {Array} Validated and normalized departures
  */
-export function validateDepartures(departures) {
+function validateDepartures(departures) {
   if (!Array.isArray(departures)) {
     return [];
   }
@@ -301,4 +301,22 @@ export function validateDepartures(departures) {
       remarks: Array.isArray(dep.remarks) ? dep.remarks : []
     };
   });
+}
+
+/* ---------- Exports ---------- */
+
+// Export for use in other modules (Node.js/testing) or browser
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    analyzeStatus: analyzeStatus,
+    formatPct: formatPct,
+    isBusDisruption: isBusDisruption,
+    isTramDisruption: isTramDisruption,
+    isSBahnDisruption: isSBahnDisruption,
+    isUBahnDisruption: isUBahnDisruption,
+    isOtherDisruption: isOtherDisruption,
+    renderDisruptions: renderDisruptions,
+    parseAPIResponse: parseAPIResponse,
+    validateDepartures: validateDepartures
+  };
 }
