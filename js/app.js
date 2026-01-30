@@ -55,14 +55,17 @@
     otherAccordionPanel: document.getElementById('other-accordion-panel'),
     otherDisruptionList: document.getElementById('other-disruption-list'),
     lineFilter: document.getElementById('line-filter'),
-    lineSelect: document.getElementById('line-select')
+    lineSelect: document.getElementById('line-select'),
+    filterReset: document.getElementById('filter-reset'),
+    activeFilters: document.getElementById('active-filters')
   };
 
   /* ---------- Application State ---------- */
 
   var appState = {
     allDepartures: [],
-    availableLines: []
+    availableLines: [],
+    selectedLines: []
   };
 
   /* ---------- Status Text Mapping ---------- */
@@ -528,6 +531,148 @@
     }
   }
 
+  /**
+   * Get currently selected lines from the multi-select dropdown.
+   * @returns {Array<string>} Array of selected line names
+   */
+  function getSelectedLines() {
+    if (!dom.lineSelect) {
+      return [];
+    }
+
+    var selected = [];
+    var options = dom.lineSelect.options;
+
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selected.push(options[i].value);
+      }
+    }
+
+    return selected;
+  }
+
+  /**
+   * Render active filter chips in the active-filters container.
+   * @param {Array<string>} selectedLines - Array of selected line names
+   */
+  function renderActiveFilters(selectedLines) {
+    if (!dom.activeFilters) {
+      return;
+    }
+
+    // Clear existing chips
+    dom.activeFilters.innerHTML = '';
+
+    // Hide container if no filters active
+    if (!selectedLines || selectedLines.length === 0) {
+      dom.activeFilters.hidden = true;
+      return;
+    }
+
+    // Show container
+    dom.activeFilters.hidden = false;
+
+    // Create chip for each selected line
+    selectedLines.forEach(function (lineName) {
+      var chip = document.createElement('div');
+      chip.className = 'filter-chip';
+      chip.setAttribute('data-line', lineName);
+
+      var label = document.createElement('span');
+      label.className = 'filter-chip-label';
+      label.textContent = lineName;
+      chip.appendChild(label);
+
+      var removeButton = document.createElement('button');
+      removeButton.className = 'filter-chip-remove';
+      removeButton.type = 'button';
+      removeButton.setAttribute('aria-label', 'Filter für ' + lineName + ' entfernen');
+      removeButton.textContent = '×';
+      chip.appendChild(removeButton);
+
+      dom.activeFilters.appendChild(chip);
+    });
+  }
+
+  /**
+   * Apply line filters and update the status display.
+   * Filters the stored departures and re-analyzes the status.
+   */
+  function applyFiltersAndUpdateStatus() {
+    if (!window.LineFilter) {
+      return;
+    }
+
+    // Get currently selected lines
+    var selectedLines = getSelectedLines();
+
+    // Store in state
+    appState.selectedLines = selectedLines;
+
+    // Filter departures using LineFilter module
+    var filteredDepartures = window.LineFilter.filterByLines(
+      appState.allDepartures,
+      selectedLines
+    );
+
+    // Analyze filtered data
+    var result = analyzeStatus(filteredDepartures);
+
+    // Update UI with filtered results
+    updateUI(result);
+
+    // Render active filter chips
+    renderActiveFilters(selectedLines);
+  }
+
+  /**
+   * Reset all line filters and restore full status view.
+   */
+  function resetFilters() {
+    if (!dom.lineSelect) {
+      return;
+    }
+
+    // Clear all selections in the dropdown
+    var options = dom.lineSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      options[i].selected = false;
+    }
+
+    // Clear state
+    appState.selectedLines = [];
+
+    // Reanalyze full dataset
+    var result = analyzeStatus(appState.allDepartures);
+    updateUI(result);
+
+    // Clear active filter chips
+    renderActiveFilters([]);
+  }
+
+  /**
+   * Remove a specific line from the active filters.
+   * @param {string} lineName - Name of the line to remove from filters
+   */
+  function removeLineFilter(lineName) {
+    if (!dom.lineSelect) {
+      return;
+    }
+
+    // Deselect the option in the dropdown
+    var options = dom.lineSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === lineName) {
+        options[i].selected = false;
+        break;
+      }
+    }
+
+    // Apply updated filters
+    applyFiltersAndUpdateStatus();
+  }
+
   /* ---------- Main Refresh Logic ---------- */
 
   /**
@@ -618,6 +763,44 @@
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           toggleAccordion(dom.otherAccordionTrigger, dom.otherAccordionPanel);
+        }
+      });
+    }
+
+    // Set up line filter event listeners
+    if (dom.lineSelect) {
+      dom.lineSelect.addEventListener('change', function () {
+        applyFiltersAndUpdateStatus();
+      });
+    }
+
+    if (dom.filterReset) {
+      dom.filterReset.addEventListener('click', function () {
+        resetFilters();
+      });
+
+      dom.filterReset.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          resetFilters();
+        }
+      });
+    }
+
+    // Set up event delegation for filter chip removal
+    if (dom.activeFilters) {
+      dom.activeFilters.addEventListener('click', function (event) {
+        // Check if clicked element is a remove button
+        var removeButton = event.target;
+        if (removeButton.classList.contains('filter-chip-remove')) {
+          // Find parent chip and get line name
+          var chip = removeButton.closest('.filter-chip');
+          if (chip) {
+            var lineName = chip.getAttribute('data-line');
+            if (lineName) {
+              removeLineFilter(lineName);
+            }
+          }
         }
       });
     }
