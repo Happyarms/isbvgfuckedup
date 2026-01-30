@@ -244,6 +244,253 @@ main {
   display: none !important;
 }
 
+/* ---------- Line Filter Section ---------- */
+.line-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 0;
+  transition: all var(--transition-speed) ease;
+}
+
+/* Active filter state - highlight when filters are applied */
+.line-filter.filters-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.filter-heading {
+  font-size: 1.15rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Filter count badge */
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  animation: badgePulse 0.4s ease-out;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.filter-select-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.line-select {
+  width: 100%;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.line-select:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.line-select:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.line-select option {
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--color-text);
+  padding: 0.5rem;
+}
+
+.line-select option:checked {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+}
+
+.filter-description {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.filter-reset-button {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all var(--transition-speed) ease;
+  white-space: nowrap;
+  height: fit-content;
+}
+
+.filter-reset-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.filter-reset-button:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.filter-reset-button:active {
+  transform: scale(0.98);
+}
+
+.filter-reset-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filter-reset-button:disabled:hover {
+  background: var(--color-card-bg);
+  border-color: var(--color-card-border);
+  transform: none;
+}
+
+/* --- Active Filters (Filter Chips) --- */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2rem;
+  align-items: center;
+}
+
+.active-filters:empty::after {
+  content: "Keine Filter aktiv";
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 2rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.filter-chip-remove:hover {
+  background: rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+}
+
+.filter-chip-remove:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.filter-chip-remove:active {
+  transform: scale(0.95);
+}
+
 /* ---------- Disruptions Section ---------- */
 .disruptions {
   display: flex;
@@ -420,6 +667,15 @@ main {
   .metric-value {
     font-size: 1.65rem;
   }
+
+  .filter-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .filter-reset-button {
+    width: 100%;
+  }
 }
 
 /* --- Mobile (max 480px) --- */
@@ -482,5 +738,54 @@ main {
 
   .disruption-source a {
     font-size: 0.75rem;
+  }
+
+  .filter-heading {
+    font-size: 1rem;
+  }
+
+  .filter-label {
+    font-size: 0.8rem;
+  }
+
+  .line-select {
+    font-size: 0.9rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .filter-description {
+    font-size: 0.75rem;
+  }
+
+  .filter-reset-button {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  .filter-chip {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.85rem;
+  }
+
+  .filter-chip-remove {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 0.9rem;
+  }
+
+  .filter-heading {
+    font-size: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-count-badge {
+    min-width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.85rem;
+    padding: 0 0.65rem;
+  }
+
+  .line-filter.filters-active {
+    padding: 1rem;
   }
 }

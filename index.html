@@ -44,6 +44,52 @@
         <span id="cancel-pct" class="metric-value">–</span>
       </div>
     </section>
+	
+	
+    <!-- Line Filter Section -->
+    <section id="line-filter" class="line-filter" hidden>
+      <h2 class="filter-heading">Linien filtern</h2>
+
+      <div class="filter-controls">
+        <div class="filter-select-container">
+          <label for="line-select" class="filter-label">
+            Wähle Linien aus:
+          </label>
+          <select
+            id="line-select"
+            class="line-select"
+            multiple
+            size="5"
+            aria-label="Wähle eine oder mehrere Linien zum Filtern"
+            aria-describedby="filter-description"
+          >
+            <!-- Populated dynamically via JavaScript -->
+          </select>
+          <p id="filter-description" class="filter-description">
+            Halte Strg (Windows) oder Cmd (Mac) gedrückt, um mehrere Linien auszuwählen.
+          </p>
+        </div>
+
+        <button
+          id="filter-reset"
+          class="filter-reset-button"
+          type="button"
+          aria-label="Alle Filter zurücksetzen"
+        >
+          Alle Filter zurücksetzen
+        </button>
+      </div>
+
+      <div
+        id="active-filters"
+        class="active-filters"
+        role="region"
+        aria-label="Aktive Filter"
+        aria-live="polite"
+      >
+        <!-- Active filter chips populated dynamically via JavaScript -->
+      </div>
+    </section>
 
     <section id="disruptions" class="disruptions" hidden>
       <h2 class="disruptions-heading">Ausfälle & Verspätungen</h2>
@@ -72,25 +118,97 @@
         </div>
       </div>
 
-      <!-- Train Accordion -->
-      <div class="accordion" id="train-accordion">
+      <!-- Tram Accordion -->
+      <div class="accordion" id="tram-accordion">
         <button
-          id="train-accordion-trigger"
+          id="tram-accordion-trigger"
           class="accordion-trigger"
           aria-expanded="false"
-          aria-controls="train-accordion-panel"
+          aria-controls="tram-accordion-panel"
           type="button"
         >
-          Bahnen
+          Tram
         </button>
         <div
-          id="train-accordion-panel"
+          id="tram-accordion-panel"
           class="accordion-panel"
           role="region"
-          aria-labelledby="train-accordion-trigger"
+          aria-labelledby="tram-accordion-trigger"
           hidden
         >
-          <div class="disruption-list" id="train-disruption-list">
+          <div class="disruption-list" id="tram-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- S-Bahn Accordion -->
+      <div class="accordion" id="sbahn-accordion">
+        <button
+          id="sbahn-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="sbahn-accordion-panel"
+          type="button"
+        >
+          S-Bahn
+        </button>
+        <div
+          id="sbahn-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="sbahn-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="sbahn-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- U-Bahn Accordion -->
+      <div class="accordion" id="ubahn-accordion">
+        <button
+          id="ubahn-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="ubahn-accordion-panel"
+          type="button"
+        >
+          U-Bahn
+        </button>
+        <div
+          id="ubahn-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="ubahn-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="ubahn-disruption-list">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Sonstige Accordion -->
+      <div class="accordion" id="other-accordion">
+        <button
+          id="other-accordion-trigger"
+          class="accordion-trigger"
+          aria-expanded="false"
+          aria-controls="other-accordion-panel"
+          type="button"
+        >
+          Sonstige
+        </button>
+        <div
+          id="other-accordion-panel"
+          class="accordion-panel"
+          role="region"
+          aria-labelledby="other-accordion-trigger"
+          hidden
+        >
+          <div class="disruption-list" id="other-disruption-list">
             <!-- Populated dynamically via JavaScript -->
           </div>
         </div>
@@ -110,6 +228,7 @@
     </div>
   </noscript>
 
+  <script src="js/line-filter.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

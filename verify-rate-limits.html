@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Rate Limit Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .metric {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      border-left: 4px solid #4CAF50;
+    }
+    .metric.warning {
+      border-left-color: #FF9800;
+    }
+    .metric.danger {
+      border-left-color: #f44336;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+    .log {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+    }
+    .log-entry.success {
+      color: #4CAF50;
+    }
+    .log-entry.error {
+      color: #f44336;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .status.pass {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.fail {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>API Rate Limit Verification</h1>
+    <p class="subtitle">Monitoring VBB Transport API calls to verify rate limits are respected</p>
+
+    <div class="metrics">
+      <div class="metric" id="metric-total">
+        <div class="metric-label">Total API Calls</div>
+        <div class="metric-value" id="total-calls">0</div>
+      </div>
+      <div class="metric" id="metric-rate">
+        <div class="metric-label">Current Rate (per min)</div>
+        <div class="metric-value" id="call-rate">0</div>
+      </div>
+      <div class="metric" id="metric-limit">
+        <div class="metric-label">Rate Limit</div>
+        <div class="metric-value">100/min</div>
+      </div>
+      <div class="metric" id="metric-usage">
+        <div class="metric-label">Usage %</div>
+        <div class="metric-value" id="usage-pct">0%</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Stations Monitored</div>
+        <div class="metric-value" id="station-count">10</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Refresh Interval</div>
+        <div class="metric-value">60s</div>
+      </div>
+    </div>
+
+    <div id="status-message"></div>
+
+    <div class="controls">
+      <button id="start-btn" onclick="startMonitoring()">Start 60s Monitoring</button>
+      <button id="stop-btn" onclick="stopMonitoring()" disabled>Stop Monitoring</button>
+      <button id="clear-btn" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <h3>API Call Log</h3>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://v6.vbb.transport.rest';
+    const STATIONS = [
+      { id: '900003201', name: 'Berlin Hauptbahnhof' },
+      { id: '900100003', name: 'Alexanderplatz' },
+      { id: '900023201', name: 'Zoologischer Garten' },
+      { id: '900100001', name: 'Friedrichstrasse' },
+      { id: '900120003', name: 'Ostbahnhof' },
+      { id: '900058103', name: 'Gesundbrunnen' },
+      { id: '900058102', name: 'Südkreuz' },
+      { id: '900029101', name: 'Spandau' },
+      { id: '900120005', name: 'Ostkreuz' },
+      { id: '900079201', name: 'Wedding' }
+    ];
+    const RATE_LIMIT = 100; // requests per minute
+    const MONITORING_DURATION = 60000; // 60 seconds
+
+    let totalCalls = 0;
+    let startTime = null;
+    let monitoringInterval = null;
+    let isMonitoring = false;
+    let callTimestamps = [];
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      entry.textContent = `[${timestamp}] ${message}`;
+      logEl.appendChild(entry);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateMetrics() {
+      document.getElementById('total-calls').textContent = totalCalls;
+      document.getElementById('station-count').textContent = STATIONS.length;
+
+      // Calculate rate per minute based on calls in last 60 seconds
+      const now = Date.now();
+      const oneMinuteAgo = now - 60000;
+      const recentCalls = callTimestamps.filter(t => t > oneMinuteAgo);
+      const rate = recentCalls.length;
+
+      document.getElementById('call-rate').textContent = rate;
+
+      const usagePct = Math.round((rate / RATE_LIMIT) * 100);
+      document.getElementById('usage-pct').textContent = usagePct + '%';
+
+      // Update metric styling based on usage
+      const metricRate = document.getElementById('metric-rate');
+      const metricUsage = document.getElementById('metric-usage');
+
+      metricRate.className = 'metric';
+      metricUsage.className = 'metric';
+
+      if (usagePct >= 80) {
+        metricRate.classList.add('danger');
+        metricUsage.classList.add('danger');
+      } else if (usagePct >= 50) {
+        metricRate.classList.add('warning');
+        metricUsage.classList.add('warning');
+      }
+    }
+
+    function showStatus(message, pass) {
+      const statusEl = document.getElementById('status-message');
+      statusEl.className = `status ${pass ? 'pass' : 'fail'}`;
+      statusEl.textContent = message;
+    }
+
+    async function fetchStationData(station) {
+      const url = `${API_BASE}/stops/${station.id}/departures?duration=30&results=50`;
+      const callTime = Date.now();
+
+      try {
+        const response = await fetch(url);
+        totalCalls++;
+        callTimestamps.push(callTime);
+
+        if (response.status === 429) {
+          log(`❌ RATE LIMIT EXCEEDED for ${station.name}`, 'error');
+          return { success: false, rateLimited: true };
+        }
+
+        if (!response.ok) {
+          log(`⚠️ API error (${response.status}) for ${station.name}`, 'error');
+          return { success: false, rateLimited: false };
+        }
+
+        const data = await response.json();
+        log(`✓ Fetched ${station.name} - ${data.departures?.length || 0} departures`, 'success');
+        return { success: true, rateLimited: false };
+
+      } catch (error) {
+        log(`❌ Network error for ${station.name}: ${error.message}`, 'error');
+        return { success: false, rateLimited: false };
+      }
+    }
+
+    async function fetchAllStations() {
+      log(`📡 Fetching data from ${STATIONS.length} stations...`);
+
+      const promises = STATIONS.map(station => fetchStationData(station));
+      const results = await Promise.allSettled(promises);
+
+      const rateLimited = results.some(r => r.value?.rateLimited);
+      const successCount = results.filter(r => r.value?.success).length;
+
+      log(`✓ Batch complete: ${successCount}/${STATIONS.length} successful`);
+      updateMetrics();
+
+      return { rateLimited, successCount };
+    }
+
+    async function startMonitoring() {
+      if (isMonitoring) return;
+
+      isMonitoring = true;
+      startTime = Date.now();
+      totalCalls = 0;
+      callTimestamps = [];
+
+      document.getElementById('start-btn').disabled = true;
+      document.getElementById('stop-btn').disabled = false;
+
+      log('🚀 Starting 60-second monitoring period...');
+      log(`Configuration: ${STATIONS.length} stations, 60s refresh interval`);
+      log(`Expected: ~${STATIONS.length} calls/min (${Math.round((STATIONS.length/RATE_LIMIT)*100)}% of limit)`);
+
+      // Initial fetch
+      await fetchAllStations();
+
+      // Set up interval to fetch every 60 seconds
+      monitoringInterval = setInterval(async () => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= MONITORING_DURATION) {
+          stopMonitoring();
+          return;
+        }
+        await fetchAllStations();
+      }, 60000);
+
+      // Auto-stop after monitoring duration
+      setTimeout(() => {
+        if (isMonitoring) {
+          stopMonitoring();
+        }
+      }, MONITORING_DURATION);
+    }
+
+    function stopMonitoring() {
+      if (!isMonitoring) return;
+
+      isMonitoring = false;
+
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+        monitoringInterval = null;
+      }
+
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('stop-btn').disabled = true;
+
+      const elapsed = Date.now() - startTime;
+      const elapsedSeconds = Math.round(elapsed / 1000);
+
+      log(`⏹️ Monitoring stopped after ${elapsedSeconds}s`);
+      log(`📊 Final metrics: ${totalCalls} total calls`);
+
+      const avgRate = Math.round((totalCalls / elapsedSeconds) * 60);
+      const usagePct = Math.round((avgRate / RATE_LIMIT) * 100);
+
+      log(`📈 Average rate: ${avgRate} calls/min (${usagePct}% of limit)`);
+
+      if (usagePct < 100) {
+        showStatus(`✓ PASS: API rate (${avgRate}/min) is well under the limit (${RATE_LIMIT}/min)`, true);
+      } else {
+        showStatus(`✗ FAIL: API rate (${avgRate}/min) exceeds the limit (${RATE_LIMIT}/min)`, false);
+      }
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+      log('Log cleared');
+    }
+
+    // Initialize
+    log('Rate limit verification tool ready');
+    log('Click "Start 60s Monitoring" to begin verification');
+  </script>
+</body>
+</html>

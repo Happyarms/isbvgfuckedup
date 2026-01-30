@@ -42,9 +42,30 @@
     busAccordionTrigger: document.getElementById('bus-accordion-trigger'),
     busAccordionPanel: document.getElementById('bus-accordion-panel'),
     busDisruptionList: document.getElementById('bus-disruption-list'),
-    trainAccordionTrigger: document.getElementById('train-accordion-trigger'),
-    trainAccordionPanel: document.getElementById('train-accordion-panel'),
-    trainDisruptionList: document.getElementById('train-disruption-list')
+    tramAccordionTrigger: document.getElementById('tram-accordion-trigger'),
+    tramAccordionPanel: document.getElementById('tram-accordion-panel'),
+    tramDisruptionList: document.getElementById('tram-disruption-list'),
+    sbahnAccordionTrigger: document.getElementById('sbahn-accordion-trigger'),
+    sbahnAccordionPanel: document.getElementById('sbahn-accordion-panel'),
+    sbahnDisruptionList: document.getElementById('sbahn-disruption-list'),
+    ubahnAccordionTrigger: document.getElementById('ubahn-accordion-trigger'),
+    ubahnAccordionPanel: document.getElementById('ubahn-accordion-panel'),
+    ubahnDisruptionList: document.getElementById('ubahn-disruption-list'),
+    otherAccordionTrigger: document.getElementById('other-accordion-trigger'),
+    otherAccordionPanel: document.getElementById('other-accordion-panel'),
+    otherDisruptionList: document.getElementById('other-disruption-list'),
+    lineFilter: document.getElementById('line-filter'),
+    lineSelect: document.getElementById('line-select'),
+    filterReset: document.getElementById('filter-reset'),
+    activeFilters: document.getElementById('active-filters')
+  };
+
+  /* ---------- Application State ---------- */
+
+  var appState = {
+    allDepartures: [],
+    availableLines: [],
+    selectedLines: []
   };
 
   /* ---------- Status Text Mapping ---------- */
@@ -116,12 +137,18 @@
   /**
    * Analyze departure data and determine BVG status.
    * @param {Array} departures - Array of departure objects from VBB API
+   * @param {boolean} isFiltered - Whether the departures are from a filtered view
    * @returns {Object} Status result with metrics and disruption details
    */
-  function analyzeStatus(departures) {
+  function analyzeStatus(departures, isFiltered) {
     if (!departures || departures.length === 0) {
+      // If we're in a filtered view with no results, treat as normal status
+      // (no disruptions for the selected lines)
+      // Otherwise, return unknown status (cannot determine overall status)
+      var status = isFiltered ? 'normal' : 'unknown';
+
       return {
-        status: 'unknown',
+        status: status,
         delayPct: 0,
         cancelPct: 0,
         total: 0,
@@ -187,10 +214,6 @@
     } else if (disruptionPct >= CONFIG.THRESHOLD_DEGRADED) {
       status = 'degraded';
     }
-
-    // Log disruption details for verification
-    console.log('Cancelled departures:', cancelled);
-    console.log('Delayed departures:', delayed);
 
     return {
       status: status,
@@ -327,20 +350,36 @@
     // Combine all disruptions
     var allDisruptions = cancelledWithType.concat(delayedWithType);
 
-    // Filter by bus and train
+    // Filter into 5 categories by vehicle type
     var busDisruptions = allDisruptions.filter(isBusDisruption);
-    var trainDisruptions = allDisruptions.filter(function (d) {
-      return !isBusDisruption(d);
-    });
+    var tramDisruptions = allDisruptions.filter(isTramDisruption);
+    var sbahnDisruptions = allDisruptions.filter(isSBahnDisruption);
+    var ubahnDisruptions = allDisruptions.filter(isUBahnDisruption);
+    var otherDisruptions = allDisruptions.filter(isOtherDisruption);
 
     // Populate bus accordion
     if (dom.busDisruptionList) {
       renderDisruptions(busDisruptions, dom.busDisruptionList, 'mixed');
     }
 
-    // Populate train accordion
-    if (dom.trainDisruptionList) {
-      renderDisruptions(trainDisruptions, dom.trainDisruptionList, 'mixed');
+    // Populate tram accordion
+    if (dom.tramDisruptionList) {
+      renderDisruptions(tramDisruptions, dom.tramDisruptionList, 'mixed');
+    }
+
+    // Populate S-Bahn accordion
+    if (dom.sbahnDisruptionList) {
+      renderDisruptions(sbahnDisruptions, dom.sbahnDisruptionList, 'mixed');
+    }
+
+    // Populate U-Bahn accordion
+    if (dom.ubahnDisruptionList) {
+      renderDisruptions(ubahnDisruptions, dom.ubahnDisruptionList, 'mixed');
+    }
+
+    // Populate Sonstige accordion
+    if (dom.otherDisruptionList) {
+      renderDisruptions(otherDisruptions, dom.otherDisruptionList, 'mixed');
     }
 
     // Show disruptions section if there are any disruptions
@@ -402,7 +441,7 @@
     if (!disruptions || disruptions.length === 0) {
       var emptyMessage = document.createElement('p');
       emptyMessage.className = 'disruption-empty';
-      emptyMessage.textContent = 'Keine Ausfälle/Verspätungen';
+      emptyMessage.textContent = 'Keine Störungen';
       containerElement.appendChild(emptyMessage);
       return;
     }
@@ -466,6 +505,349 @@
     });
   }
 
+  /**
+   * Populate the line filter dropdown with available lines from departure data.
+   * @param {Array} departures - Array of departure objects
+   */
+  function populateLineFilter(departures) {
+    if (!dom.lineSelect || !window.LineFilter) {
+      return;
+    }
+
+    // Extract unique line names using the LineFilter module
+    var lineNames = window.LineFilter.extractUniqueLines(departures);
+
+    // Store in application state
+    appState.availableLines = lineNames;
+
+    // Preserve currently selected lines before clearing
+    var previouslySelected = appState.selectedLines || [];
+
+    // Clear existing options
+    dom.lineSelect.innerHTML = '';
+
+    // Populate dropdown with line options
+    lineNames.forEach(function (lineName) {
+      var option = document.createElement('option');
+      option.value = lineName;
+      option.textContent = lineName;
+
+      // Restore selection if this line was previously selected
+      if (previouslySelected.indexOf(lineName) !== -1) {
+        option.selected = true;
+      }
+
+      dom.lineSelect.appendChild(option);
+    });
+
+    // Update appState.selectedLines to only include lines that exist in current data
+    // This ensures saved filters are cleaned up if some lines no longer exist
+    appState.selectedLines = previouslySelected.filter(function (lineName) {
+      return lineNames.indexOf(lineName) !== -1;
+    });
+
+    // Show the filter section if we have lines and it's currently hidden
+    if (lineNames.length > 0 && dom.lineFilter && dom.lineFilter.hasAttribute('hidden')) {
+      dom.lineFilter.removeAttribute('hidden');
+    }
+  }
+
+  /**
+   * Get currently selected lines from the multi-select dropdown.
+   * @returns {Array<string>} Array of selected line names
+   */
+  function getSelectedLines() {
+    if (!dom.lineSelect) {
+      return [];
+    }
+
+    var selected = [];
+    var options = dom.lineSelect.options;
+
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selected.push(options[i].value);
+      }
+    }
+
+    return selected;
+  }
+
+  /**
+   * Update visual feedback for filter activity.
+   * Adds/removes highlight and count badge based on active filters.
+   * @param {number} filterCount - Number of active filters
+   */
+  function updateFilterVisualFeedback(filterCount) {
+    if (!dom.lineFilter) {
+      return;
+    }
+
+    var filterHeading = dom.lineFilter.querySelector('.filter-heading');
+    if (!filterHeading) {
+      return;
+    }
+
+    // Remove existing badge if present
+    var existingBadge = filterHeading.querySelector('.filter-count-badge');
+    if (existingBadge) {
+      existingBadge.remove();
+    }
+
+    if (filterCount > 0) {
+      // Add active class to highlight filter section
+      dom.lineFilter.classList.add('filters-active');
+
+      // Create and add count badge
+      var badge = document.createElement('span');
+      badge.className = 'filter-count-badge';
+      badge.textContent = filterCount;
+      badge.setAttribute('aria-label', filterCount + ' aktive ' + (filterCount === 1 ? 'Filter' : 'Filter'));
+      filterHeading.appendChild(badge);
+    } else {
+      // Remove active class
+      dom.lineFilter.classList.remove('filters-active');
+    }
+  }
+
+  /**
+   * Render active filter chips in the active-filters container.
+   * @param {Array<string>} selectedLines - Array of selected line names
+   */
+  function renderActiveFilters(selectedLines) {
+    if (!dom.activeFilters) {
+      return;
+    }
+
+    // Clear existing chips
+    dom.activeFilters.innerHTML = '';
+
+    var filterCount = selectedLines ? selectedLines.length : 0;
+
+    // Update visual feedback (highlight and badge)
+    updateFilterVisualFeedback(filterCount);
+
+    // Hide container if no filters active
+    if (!selectedLines || selectedLines.length === 0) {
+      dom.activeFilters.hidden = true;
+      // Announce to screen readers that filters have been cleared
+      dom.activeFilters.setAttribute('aria-label', 'Aktive Filter: Keine Filter aktiv');
+      return;
+    }
+
+    // Show container
+    dom.activeFilters.hidden = false;
+
+    // Update aria-label with filter count for screen readers
+    var filterLabel = 'Aktive Filter: ' + filterCount + ' ' +
+                      (filterCount === 1 ? 'Linie' : 'Linien') + ' ausgewählt';
+    dom.activeFilters.setAttribute('aria-label', filterLabel);
+
+    // Create chip for each selected line
+    selectedLines.forEach(function (lineName) {
+      var chip = document.createElement('div');
+      chip.className = 'filter-chip';
+      chip.setAttribute('data-line', lineName);
+
+      var label = document.createElement('span');
+      label.className = 'filter-chip-label';
+      label.textContent = lineName;
+      chip.appendChild(label);
+
+      var removeButton = document.createElement('button');
+      removeButton.className = 'filter-chip-remove';
+      removeButton.type = 'button';
+      removeButton.setAttribute('aria-label', 'Filter für ' + lineName + ' entfernen');
+      removeButton.textContent = '×';
+      chip.appendChild(removeButton);
+
+      dom.activeFilters.appendChild(chip);
+    });
+  }
+
+  /**
+   * Check if localStorage is available and accessible.
+   * Handles cases like private browsing mode or disabled storage.
+   * @returns {boolean} True if localStorage can be used
+   */
+  function isLocalStorageAvailable() {
+    try {
+      var testKey = '__bvg_storage_test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Validate that data is an array of strings.
+   * @param {*} data - Data to validate
+   * @returns {boolean} True if data is a valid array of strings
+   */
+  function isValidFilterData(data) {
+    if (!Array.isArray(data)) {
+      return false;
+    }
+    // Ensure all elements are strings
+    for (var i = 0; i < data.length; i++) {
+      if (typeof data[i] !== 'string') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Save selected line filters to localStorage.
+   * Handles edge cases: localStorage disabled, quota exceeded, private browsing.
+   * @param {Array<string>} selectedLines - Array of line names to save
+   */
+  function saveFiltersToLocalStorage(selectedLines) {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
+
+    try {
+      var data = JSON.stringify(selectedLines || []);
+      localStorage.setItem('bvg-line-filters', data);
+    } catch (error) {
+      // Silently handle localStorage errors (e.g., quota exceeded, private browsing)
+      // Clear potentially corrupted data
+      try {
+        localStorage.removeItem('bvg-line-filters');
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
+  }
+
+  /**
+   * Load selected line filters from localStorage.
+   * Handles edge cases: localStorage disabled, corrupt JSON, invalid data types.
+   * @returns {Array<string>} Array of saved line names, or empty array if none saved/invalid
+   */
+  function loadFiltersFromLocalStorage() {
+    if (!isLocalStorageAvailable()) {
+      return [];
+    }
+
+    try {
+      var data = localStorage.getItem('bvg-line-filters');
+      if (!data) {
+        return [];
+      }
+
+      var parsed = JSON.parse(data);
+
+      // Validate parsed data is an array of strings
+      if (!isValidFilterData(parsed)) {
+        // Clear corrupt data
+        localStorage.removeItem('bvg-line-filters');
+        return [];
+      }
+
+      return parsed;
+    } catch (error) {
+      // Handle invalid JSON or other errors
+      try {
+        // Clear corrupt data
+        localStorage.removeItem('bvg-line-filters');
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Apply line filters and update the status display.
+   * Filters the stored departures and re-analyzes the status.
+   */
+  function applyFiltersAndUpdateStatus() {
+    if (!window.LineFilter) {
+      return;
+    }
+
+    // Get currently selected lines
+    var selectedLines = getSelectedLines();
+
+    // Store in state
+    appState.selectedLines = selectedLines;
+
+    // Save to localStorage
+    saveFiltersToLocalStorage(selectedLines);
+
+    // Filter departures using LineFilter module
+    var filteredDepartures = window.LineFilter.filterByLines(
+      appState.allDepartures,
+      selectedLines
+    );
+
+    // Analyze filtered data
+    // Pass isFiltered=true to handle empty results gracefully
+    var isFiltered = selectedLines && selectedLines.length > 0;
+    var result = analyzeStatus(filteredDepartures, isFiltered);
+
+    // Update UI with filtered results
+    updateUI(result);
+
+    // Render active filter chips
+    renderActiveFilters(selectedLines);
+  }
+
+  /**
+   * Reset all line filters and restore full status view.
+   */
+  function resetFilters() {
+    if (!dom.lineSelect) {
+      return;
+    }
+
+    // Clear all selections in the dropdown
+    var options = dom.lineSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      options[i].selected = false;
+    }
+
+    // Clear state
+    appState.selectedLines = [];
+
+    // Clear localStorage
+    saveFiltersToLocalStorage([]);
+
+    // Reanalyze full dataset
+    // Pass isFiltered=false since we're showing all data
+    var result = analyzeStatus(appState.allDepartures, false);
+    updateUI(result);
+
+    // Clear active filter chips
+    renderActiveFilters([]);
+  }
+
+  /**
+   * Remove a specific line from the active filters.
+   * @param {string} lineName - Name of the line to remove from filters
+   */
+  function removeLineFilter(lineName) {
+    if (!dom.lineSelect) {
+      return;
+    }
+
+    // Deselect the option in the dropdown
+    var options = dom.lineSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === lineName) {
+        options[i].selected = false;
+        break;
+      }
+    }
+
+    // Apply updated filters
+    applyFiltersAndUpdateStatus();
+  }
+
   /* ---------- Main Refresh Logic ---------- */
 
   /**
@@ -476,8 +858,35 @@
 
     return fetchAllStations()
       .then(function (departures) {
-        var result = analyzeStatus(departures);
+        // Store departures in application state
+        appState.allDepartures = departures;
+
+        // Populate line filter dropdown with available lines
+        // (preserves any active selections)
+        populateLineFilter(departures);
+
+        // Determine which departures to analyze based on active filters
+        var departuresToAnalyze = departures;
+        var isFiltered = false;
+
+        if (appState.selectedLines && appState.selectedLines.length > 0 && window.LineFilter) {
+          // Apply active filters
+          departuresToAnalyze = window.LineFilter.filterByLines(
+            departures,
+            appState.selectedLines
+          );
+          isFiltered = true;
+        }
+
+        // Analyze and update UI with filtered or full dataset
+        // Pass isFiltered flag to handle empty filter results gracefully
+        var result = analyzeStatus(departuresToAnalyze, isFiltered);
         updateUI(result);
+
+        // Update active filter chips to reflect current state
+        if (appState.selectedLines && appState.selectedLines.length > 0) {
+          renderActiveFilters(appState.selectedLines);
+        }
       })
       .catch(function (error) {
         showError('Fehler beim Abrufen der Daten: ' + error.message);
@@ -501,20 +910,139 @@
       });
     }
 
-    if (dom.trainAccordionTrigger && dom.trainAccordionPanel) {
-      dom.trainAccordionTrigger.addEventListener('click', function () {
-        toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+    if (dom.tramAccordionTrigger && dom.tramAccordionPanel) {
+      dom.tramAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.tramAccordionTrigger, dom.tramAccordionPanel);
       });
 
-      dom.trainAccordionTrigger.addEventListener('keydown', function (event) {
+      dom.tramAccordionTrigger.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          toggleAccordion(dom.trainAccordionTrigger, dom.trainAccordionPanel);
+          toggleAccordion(dom.tramAccordionTrigger, dom.tramAccordionPanel);
         }
       });
+    }
+
+    if (dom.sbahnAccordionTrigger && dom.sbahnAccordionPanel) {
+      dom.sbahnAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.sbahnAccordionTrigger, dom.sbahnAccordionPanel);
+      });
+
+      dom.sbahnAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.sbahnAccordionTrigger, dom.sbahnAccordionPanel);
+        }
+      });
+    }
+
+    if (dom.ubahnAccordionTrigger && dom.ubahnAccordionPanel) {
+      dom.ubahnAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.ubahnAccordionTrigger, dom.ubahnAccordionPanel);
+      });
+
+      dom.ubahnAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.ubahnAccordionTrigger, dom.ubahnAccordionPanel);
+        }
+      });
+    }
+
+    if (dom.otherAccordionTrigger && dom.otherAccordionPanel) {
+      dom.otherAccordionTrigger.addEventListener('click', function () {
+        toggleAccordion(dom.otherAccordionTrigger, dom.otherAccordionPanel);
+      });
+
+      dom.otherAccordionTrigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleAccordion(dom.otherAccordionTrigger, dom.otherAccordionPanel);
+        }
+      });
+    }
+
+    // Set up line filter event listeners
+    if (dom.lineSelect) {
+      dom.lineSelect.addEventListener('change', function () {
+        applyFiltersAndUpdateStatus();
+      });
+    }
+
+    if (dom.filterReset) {
+      dom.filterReset.addEventListener('click', function () {
+        resetFilters();
+      });
+
+      dom.filterReset.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          resetFilters();
+        }
+      });
+    }
+
+    // Set up event delegation for filter chip removal (click events)
+    if (dom.activeFilters) {
+      dom.activeFilters.addEventListener('click', function (event) {
+        // Check if clicked element is a remove button
+        var removeButton = event.target;
+        if (removeButton.classList.contains('filter-chip-remove')) {
+          // Find parent chip and get line name
+          var chip = removeButton.closest('.filter-chip');
+          if (chip) {
+            var lineName = chip.getAttribute('data-line');
+            if (lineName) {
+              removeLineFilter(lineName);
+            }
+          }
+        }
+      });
+
+      // Set up event delegation for filter chip removal (keyboard events)
+      dom.activeFilters.addEventListener('keydown', function (event) {
+        // Check if the focused element is a remove button
+        var removeButton = event.target;
+        if (removeButton.classList.contains('filter-chip-remove')) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            // Find parent chip and get line name
+            var chip = removeButton.closest('.filter-chip');
+            if (chip) {
+              var lineName = chip.getAttribute('data-line');
+              if (lineName) {
+                removeLineFilter(lineName);
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Load saved filters from localStorage
+    var savedFilters = loadFiltersFromLocalStorage();
+    if (savedFilters && savedFilters.length > 0) {
+      appState.selectedLines = savedFilters;
     }
 
     refreshStatus();
     setInterval(refreshStatus, CONFIG.REFRESH_INTERVAL_MS);
   });
+
+  /* ---------- Exports for Testing ---------- */
+  // Export functions for testing in Node.js environment
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = {
+        analyzeStatus: analyzeStatus,
+        formatPct: formatPct,
+        isBusDisruption: isBusDisruption,
+        isTramDisruption: isTramDisruption,
+        isSBahnDisruption: isSBahnDisruption,
+        isUBahnDisruption: isUBahnDisruption,
+        isOtherDisruption: isOtherDisruption,
+        renderDisruptions: renderDisruptions
+      };
+    }
+  }
 })();
