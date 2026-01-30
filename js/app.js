@@ -582,11 +582,19 @@
     // Hide container if no filters active
     if (!selectedLines || selectedLines.length === 0) {
       dom.activeFilters.hidden = true;
+      // Announce to screen readers that filters have been cleared
+      dom.activeFilters.setAttribute('aria-label', 'Aktive Filter: Keine Filter aktiv');
       return;
     }
 
     // Show container
     dom.activeFilters.hidden = false;
+
+    // Update aria-label with filter count for screen readers
+    var filterCount = selectedLines.length;
+    var filterLabel = 'Aktive Filter: ' + filterCount + ' ' +
+                      (filterCount === 1 ? 'Linie' : 'Linien') + ' ausgewählt';
+    dom.activeFilters.setAttribute('aria-label', filterLabel);
 
     // Create chip for each selected line
     selectedLines.forEach(function (lineName) {
@@ -920,7 +928,7 @@
       });
     }
 
-    // Set up event delegation for filter chip removal
+    // Set up event delegation for filter chip removal (click events)
     if (dom.activeFilters) {
       dom.activeFilters.addEventListener('click', function (event) {
         // Check if clicked element is a remove button
@@ -932,6 +940,25 @@
             var lineName = chip.getAttribute('data-line');
             if (lineName) {
               removeLineFilter(lineName);
+            }
+          }
+        }
+      });
+
+      // Set up event delegation for filter chip removal (keyboard events)
+      dom.activeFilters.addEventListener('keydown', function (event) {
+        // Check if the focused element is a remove button
+        var removeButton = event.target;
+        if (removeButton.classList.contains('filter-chip-remove')) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            // Find parent chip and get line name
+            var chip = removeButton.closest('.filter-chip');
+            if (chip) {
+              var lineName = chip.getAttribute('data-line');
+              if (lineName) {
+                removeLineFilter(lineName);
+              }
             }
           }
         }
