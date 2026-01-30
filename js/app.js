@@ -137,12 +137,18 @@
   /**
    * Analyze departure data and determine BVG status.
    * @param {Array} departures - Array of departure objects from VBB API
+   * @param {boolean} isFiltered - Whether the departures are from a filtered view
    * @returns {Object} Status result with metrics and disruption details
    */
-  function analyzeStatus(departures) {
+  function analyzeStatus(departures, isFiltered) {
     if (!departures || departures.length === 0) {
+      // If we're in a filtered view with no results, treat as normal status
+      // (no disruptions for the selected lines)
+      // Otherwise, return unknown status (cannot determine overall status)
+      var status = isFiltered ? 'normal' : 'unknown';
+
       return {
-        status: 'unknown',
+        status: status,
         delayPct: 0,
         cancelPct: 0,
         total: 0,
@@ -435,7 +441,7 @@
     if (!disruptions || disruptions.length === 0) {
       var emptyMessage = document.createElement('p');
       emptyMessage.className = 'disruption-empty';
-      emptyMessage.textContent = 'Keine Ausfälle/Verspätungen';
+      emptyMessage.textContent = 'Keine Störungen';
       containerElement.appendChild(emptyMessage);
       return;
     }
@@ -739,7 +745,9 @@
     );
 
     // Analyze filtered data
-    var result = analyzeStatus(filteredDepartures);
+    // Pass isFiltered=true to handle empty results gracefully
+    var isFiltered = selectedLines && selectedLines.length > 0;
+    var result = analyzeStatus(filteredDepartures, isFiltered);
 
     // Update UI with filtered results
     updateUI(result);
@@ -769,7 +777,8 @@
     saveFiltersToLocalStorage([]);
 
     // Reanalyze full dataset
-    var result = analyzeStatus(appState.allDepartures);
+    // Pass isFiltered=false since we're showing all data
+    var result = analyzeStatus(appState.allDepartures, false);
     updateUI(result);
 
     // Clear active filter chips
@@ -817,16 +826,20 @@
 
         // Determine which departures to analyze based on active filters
         var departuresToAnalyze = departures;
+        var isFiltered = false;
+
         if (appState.selectedLines && appState.selectedLines.length > 0 && window.LineFilter) {
           // Apply active filters
           departuresToAnalyze = window.LineFilter.filterByLines(
             departures,
             appState.selectedLines
           );
+          isFiltered = true;
         }
 
         // Analyze and update UI with filtered or full dataset
-        var result = analyzeStatus(departuresToAnalyze);
+        // Pass isFiltered flag to handle empty filter results gracefully
+        var result = analyzeStatus(departuresToAnalyze, isFiltered);
         updateUI(result);
 
         // Update active filter chips to reflect current state
