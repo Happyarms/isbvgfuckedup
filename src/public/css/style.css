@@ -316,6 +316,76 @@ body.status-unknown {
 }
 
 /* ------------------------------------------------------------------ */
+/* Transit status boxes – summary boxes for each transit type        */
+/* ------------------------------------------------------------------ */
+
+.transit-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.transit-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.25rem;
+  background: var(--color-overlay-light);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 8px;
+  min-width: 140px;
+  flex: 1;
+  max-width: 200px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.transit-box:hover {
+  background: var(--color-overlay-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.transit-type {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.transit-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.transit-count-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.count-label {
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.count-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------ */
 /* Staleness warning                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -418,6 +488,28 @@ body.status-unknown {
     font-size: 0.75rem;
   }
 
+  /* Transit boxes – reduce sizing on tablets */
+  .transit-boxes {
+    gap: 1rem;
+  }
+
+  .transit-box {
+    padding: 1.25rem 1rem;
+    min-width: 120px;
+  }
+
+  .transit-type {
+    font-size: 0.85rem;
+  }
+
+  .count-value {
+    font-size: 1.3rem;
+  }
+
+  .count-label {
+    font-size: 0.7rem;
+  }
+
   /* Theme toggle – slightly smaller on tablets */
   .theme-toggle {
     top: 1rem;
@@ -480,6 +572,38 @@ body.status-unknown {
   .metric-label {
     font-size: 0.75rem;
     margin-top: 0;
+  }
+
+  /* Transit boxes – 2x2 grid on mobile phones */
+  .transit-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .transit-box {
+    padding: 1rem 0.75rem;
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+
+  .transit-type {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .transit-counts {
+    gap: 0.4rem;
+  }
+
+  .count-value {
+    font-size: 1.2rem;
+  }
+
+  .count-label {
+    font-size: 0.65rem;
   }
 
   .footer-info {
