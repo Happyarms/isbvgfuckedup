@@ -36,6 +36,22 @@
    */
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    updateThemeToggleIcon(theme);
+  }
+
+  /**
+   * Update the theme toggle button icon to reflect the current theme.
+   * Shows sun icon in dark mode, moon icon in light mode.
+   * @param {string} theme - 'light' or 'dark'
+   */
+  function updateThemeToggleIcon(theme) {
+    const toggleButton = document.querySelector('.theme-toggle');
+    if (!toggleButton) {
+      return;
+    }
+    // Show sun when in dark mode (click to go light)
+    // Show moon when in light mode (click to go dark)
+    toggleButton.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
 
   /**
@@ -122,16 +138,32 @@
     timerInterval = setInterval(tick, 1000);
   }
 
+  /**
+   * Initialize the theme toggle button.
+   * Attaches click event listener to toggle theme.
+   */
+  function initThemeToggle() {
+    const toggleButton = document.querySelector('.theme-toggle');
+    if (!toggleButton) {
+      return;
+    }
+    toggleButton.addEventListener('click', toggleTheme);
+  }
+
   /* Initialize theme immediately to avoid flash */
   initTheme();
 
   /* Set up system preference change listener */
   initSystemPreferenceListener();
 
-  /* Kick off timer once the DOM is ready */
+  /* Kick off timer and initialize theme toggle once the DOM is ready */
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startTimer);
+    document.addEventListener('DOMContentLoaded', function() {
+      startTimer();
+      initThemeToggle();
+    });
   } else {
     startTimer();
+    initThemeToggle();
   }
 })();
