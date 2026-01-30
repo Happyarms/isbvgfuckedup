@@ -48,6 +48,11 @@ app.enable('trust proxy');
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
+// Disable view caching in development to always recompile templates
+if (!config.isProduction) {
+  app.disable('view cache');
+}
+
 // Static files (CSS, client JS)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -108,7 +113,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   app.listen(config.port, () => {
     process.stdout.write(
-      `[server] Listening on port ${config.port} (${config.nodeEnv})\n`
+      `[server] Listening on port ${config.port} (${config.nodeEnv}) - RELOADED ${new Date().toISOString()}\n`
     );
   });
 }
@@ -119,3 +124,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export { app, poller };
 export default app;
+

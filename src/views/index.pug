@@ -25,6 +25,45 @@ block content
           span.metric-value= metrics.totalServices
           span.metric-label  Abfahrten
 
+    //- Transit boxes section
+    .transit-boxes
+      .transit-box
+        .transit-box-header Bus
+        .transit-box-stats
+          .transit-stat
+            span.transit-stat-value#bus-delayed-count 0
+            span.transit-stat-label verspaetet
+          .transit-stat
+            span.transit-stat-value#bus-cancelled-count 0
+            span.transit-stat-label ausgefallen
+      .transit-box
+        .transit-box-header U-Bahn
+        .transit-box-stats
+          .transit-stat
+            span.transit-stat-value#ubahn-delayed-count 0
+            span.transit-stat-label verspaetet
+          .transit-stat
+            span.transit-stat-value#ubahn-cancelled-count 0
+            span.transit-stat-label ausgefallen
+      .transit-box
+        .transit-box-header Tram
+        .transit-box-stats
+          .transit-stat
+            span.transit-stat-value#tram-delayed-count 0
+            span.transit-stat-label verspaetet
+          .transit-stat
+            span.transit-stat-value#tram-cancelled-count 0
+            span.transit-stat-label ausgefallen
+      .transit-box
+        .transit-box-header S-Bahn
+        .transit-box-stats
+          .transit-stat
+            span.transit-stat-value#sbahn-delayed-count 0
+            span.transit-stat-label verspaetet
+          .transit-stat
+            span.transit-stat-value#sbahn-cancelled-count 0
+            span.transit-stat-label ausgefallen
+
     //- Staleness warning
     if stale
       .stale-warning Daten sind veraltet.
