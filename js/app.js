@@ -605,6 +605,36 @@
   }
 
   /**
+   * Save selected line filters to localStorage.
+   * @param {Array<string>} selectedLines - Array of line names to save
+   */
+  function saveFiltersToLocalStorage(selectedLines) {
+    try {
+      var data = JSON.stringify(selectedLines || []);
+      localStorage.setItem('bvg-line-filters', data);
+    } catch (error) {
+      // Silently handle localStorage errors (e.g., quota exceeded, private browsing)
+    }
+  }
+
+  /**
+   * Load selected line filters from localStorage.
+   * @returns {Array<string>} Array of saved line names, or empty array if none saved
+   */
+  function loadFiltersFromLocalStorage() {
+    try {
+      var data = localStorage.getItem('bvg-line-filters');
+      if (data) {
+        var parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (error) {
+      // Silently handle localStorage errors (e.g., invalid JSON, access denied)
+    }
+    return [];
+  }
+
+  /**
    * Apply line filters and update the status display.
    * Filters the stored departures and re-analyzes the status.
    */
@@ -618,6 +648,9 @@
 
     // Store in state
     appState.selectedLines = selectedLines;
+
+    // Save to localStorage
+    saveFiltersToLocalStorage(selectedLines);
 
     // Filter departures using LineFilter module
     var filteredDepartures = window.LineFilter.filterByLines(
@@ -651,6 +684,9 @@
 
     // Clear state
     appState.selectedLines = [];
+
+    // Clear localStorage
+    saveFiltersToLocalStorage([]);
 
     // Reanalyze full dataset
     var result = analyzeStatus(appState.allDepartures);
@@ -828,6 +864,12 @@
           }
         }
       });
+    }
+
+    // Load saved filters from localStorage
+    var savedFilters = loadFiltersFromLocalStorage();
+    if (savedFilters && savedFilters.length > 0) {
+      appState.selectedLines = savedFilters;
     }
 
     refreshStatus();
