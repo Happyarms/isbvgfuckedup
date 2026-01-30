@@ -150,6 +150,58 @@ body.status-unknown {
 }
 
 /* ------------------------------------------------------------------ */
+/* Theme Toggle Button – positioned in top-right corner              */
+/* ------------------------------------------------------------------ */
+
+.theme-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+
+  /* Button styling */
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 2px solid var(--color-overlay-light);
+  border-radius: 50%;
+  background: var(--color-overlay-dark);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  /* Text styling */
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text);
+  cursor: pointer;
+
+  /* Transitions */
+  transition: all 0.3s ease;
+
+  /* Remove default button styles */
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.theme-toggle:hover {
+  background: var(--color-overlay-light);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
 /* Container – full-viewport, centered content                        */
 /* ------------------------------------------------------------------ */
 
@@ -365,6 +417,15 @@ body.status-unknown {
   .metric-label {
     font-size: 0.75rem;
   }
+
+  /* Theme toggle – slightly smaller on tablets */
+  .theme-toggle {
+    top: 1rem;
+    right: 1rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.4rem;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -423,5 +484,26 @@ body.status-unknown {
 
   .footer-info {
     font-size: 0.75rem;
+  }
+
+  /* Theme toggle – smaller and with better touch target on phones */
+  .theme-toggle {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+    /* Ensure button is tappable on mobile */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Slightly larger hover state for better mobile interaction */
+  .theme-toggle:hover {
+    transform: scale(1.05);
+  }
+
+  .theme-toggle:active {
+    transform: scale(0.98);
   }
 }
