@@ -250,6 +250,19 @@ main {
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 0;
+  transition: all var(--transition-speed) ease;
+}
+
+/* Active filter state - highlight when filters are applied */
+.line-filter.filters-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .filter-heading {
@@ -259,6 +272,43 @@ main {
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Filter count badge */
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  animation: badgePulse 0.4s ease-out;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .filter-controls {
@@ -721,5 +771,21 @@ main {
     width: 1.1rem;
     height: 1.1rem;
     font-size: 0.9rem;
+  }
+
+  .filter-heading {
+    font-size: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-count-badge {
+    min-width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.85rem;
+    padding: 0 0.65rem;
+  }
+
+  .line-filter.filters-active {
+    padding: 1rem;
   }
 }

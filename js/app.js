@@ -574,6 +574,43 @@
   }
 
   /**
+   * Update visual feedback for filter activity.
+   * Adds/removes highlight and count badge based on active filters.
+   * @param {number} filterCount - Number of active filters
+   */
+  function updateFilterVisualFeedback(filterCount) {
+    if (!dom.lineFilter) {
+      return;
+    }
+
+    var filterHeading = dom.lineFilter.querySelector('.filter-heading');
+    if (!filterHeading) {
+      return;
+    }
+
+    // Remove existing badge if present
+    var existingBadge = filterHeading.querySelector('.filter-count-badge');
+    if (existingBadge) {
+      existingBadge.remove();
+    }
+
+    if (filterCount > 0) {
+      // Add active class to highlight filter section
+      dom.lineFilter.classList.add('filters-active');
+
+      // Create and add count badge
+      var badge = document.createElement('span');
+      badge.className = 'filter-count-badge';
+      badge.textContent = filterCount;
+      badge.setAttribute('aria-label', filterCount + ' aktive ' + (filterCount === 1 ? 'Filter' : 'Filter'));
+      filterHeading.appendChild(badge);
+    } else {
+      // Remove active class
+      dom.lineFilter.classList.remove('filters-active');
+    }
+  }
+
+  /**
    * Render active filter chips in the active-filters container.
    * @param {Array<string>} selectedLines - Array of selected line names
    */
@@ -584,6 +621,11 @@
 
     // Clear existing chips
     dom.activeFilters.innerHTML = '';
+
+    var filterCount = selectedLines ? selectedLines.length : 0;
+
+    // Update visual feedback (highlight and badge)
+    updateFilterVisualFeedback(filterCount);
 
     // Hide container if no filters active
     if (!selectedLines || selectedLines.length === 0) {
@@ -597,7 +639,6 @@
     dom.activeFilters.hidden = false;
 
     // Update aria-label with filter count for screen readers
-    var filterCount = selectedLines.length;
     var filterLabel = 'Aktive Filter: ' + filterCount + ' ' +
                       (filterCount === 1 ? 'Linie' : 'Linien') + ' ausgewählt';
     dom.activeFilters.setAttribute('aria-label', filterLabel);
