@@ -514,6 +514,9 @@
     // Store in application state
     appState.availableLines = lineNames;
 
+    // Preserve currently selected lines before clearing
+    var previouslySelected = appState.selectedLines || [];
+
     // Clear existing options
     dom.lineSelect.innerHTML = '';
 
@@ -522,6 +525,12 @@
       var option = document.createElement('option');
       option.value = lineName;
       option.textContent = lineName;
+
+      // Restore selection if this line was previously selected
+      if (previouslySelected.indexOf(lineName) !== -1) {
+        option.selected = true;
+      }
+
       dom.lineSelect.appendChild(option);
     });
 
@@ -687,11 +696,27 @@
         appState.allDepartures = departures;
 
         // Populate line filter dropdown with available lines
+        // (preserves any active selections)
         populateLineFilter(departures);
 
-        // Analyze and update UI
-        var result = analyzeStatus(departures);
+        // Determine which departures to analyze based on active filters
+        var departuresToAnalyze = departures;
+        if (appState.selectedLines && appState.selectedLines.length > 0 && window.LineFilter) {
+          // Apply active filters
+          departuresToAnalyze = window.LineFilter.filterByLines(
+            departures,
+            appState.selectedLines
+          );
+        }
+
+        // Analyze and update UI with filtered or full dataset
+        var result = analyzeStatus(departuresToAnalyze);
         updateUI(result);
+
+        // Update active filter chips to reflect current state
+        if (appState.selectedLines && appState.selectedLines.length > 0) {
+          renderActiveFilters(appState.selectedLines);
+        }
       })
       .catch(function (error) {
         showError('Fehler beim Abrufen der Daten: ' + error.message);
