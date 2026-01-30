@@ -534,6 +534,12 @@
       dom.lineSelect.appendChild(option);
     });
 
+    // Update appState.selectedLines to only include lines that exist in current data
+    // This ensures saved filters are cleaned up if some lines no longer exist
+    appState.selectedLines = previouslySelected.filter(function (lineName) {
+      return lineNames.indexOf(lineName) !== -1;
+    });
+
     // Show the filter section if we have lines and it's currently hidden
     if (lineNames.length > 0 && dom.lineFilter && dom.lineFilter.hasAttribute('hidden')) {
       dom.lineFilter.removeAttribute('hidden');
