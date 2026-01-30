@@ -1,0 +1,36 @@
+//- Main status page template.
+//- Follows IsSeptaFcked views/index.pug pattern: bold status display with
+//- dynamic CSS class, metrics, and timestamp.
+extends layouts/main
+
+block content
+  .status-container
+    h1.site-title Ist BVG gefickt?
+
+    //- Bold status display with dynamic CSS class
+    .status(class=statusClass)
+      span.status-emoji= emoji
+      .status-text= message
+
+    //- Metrics section
+    if metrics && metrics.totalServices > 0
+      .metrics
+        .metric
+          span.metric-value= metrics.percentDelayed + '%'
+          span.metric-label  verspaetet
+        .metric
+          span.metric-value= metrics.percentCancelled + '%'
+          span.metric-label  ausgefallen
+        .metric
+          span.metric-value= metrics.totalServices
+          span.metric-label  Abfahrten
+
+    //- Staleness warning
+    if stale
+      .stale-warning Daten sind veraltet.
+
+    //- Timestamp and auto-refresh indicator
+    .footer-info
+      if timestamp
+        .timestamp Zuletzt aktualisiert: #{timestamp}
+      .refresh-indicator Automatische Aktualisierung alle 60 Sekunden

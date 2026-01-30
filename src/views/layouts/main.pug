@@ -1,0 +1,38 @@
+//- Base layout template.
+//- Follows IsSeptaFcked views/layout.pug pattern: HTML5 boilerplate with
+//- meta tags, viewport, CSS link, JS script tag.
+doctype html
+html(lang="de")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1")
+    meta(name="description", content="Echtzeit-Status der Berliner BVG. Ist die BVG gerade gefickt?")
+
+    title= title || 'Ist BVG gefickt?'
+
+    //- Open Graph meta tags for social sharing
+    meta(property="og:title", content="Ist BVG gefickt?")
+    meta(property="og:description", content="Echtzeit-Status der Berliner Verkehrsbetriebe (BVG)")
+    meta(property="og:type", content="website")
+
+    //- Twitter Card meta tags
+    meta(name="twitter:card", content="summary")
+    meta(name="twitter:title", content="Ist BVG gefickt?")
+    meta(name="twitter:description", content="Echtzeit-Status der Berliner Verkehrsbetriebe (BVG)")
+
+    //- Stylesheet
+    link(rel="stylesheet", href="/css/style.css")
+
+  body(class=bodyClass || '')
+    //- Theme toggle button (positioned in corner via CSS)
+    button.theme-toggle(
+      type="button"
+      aria-label="Farbschema umschalten"
+      title="Farbschema umschalten"
+    ) ☀️
+
+    .container
+      block content
+
+    //- Client-side JavaScript for auto-refresh
+    script(src="/js/client.js")

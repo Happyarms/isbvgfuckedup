@@ -1,0 +1,21 @@
+//- Error fallback page template.
+//- Displayed when the server encounters an error.
+extends layouts/main
+
+block content
+  .status-container
+    h1.site-title Ist BVG gefickt?
+
+    .status.status-unknown
+      span.status-emoji ?
+      .status-text Etwas ist schiefgelaufen.
+
+    .error-details
+      if errorMessage
+        p.error-message= errorMessage
+      else
+        p.error-message Die Seite konnte nicht geladen werden.
+
+    .footer-info
+      p
+        a(href="/") Zur Startseite
