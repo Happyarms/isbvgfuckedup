@@ -149,13 +149,8 @@ function updateTransitBoxes(aggregatedData) {
   }
 }
 
-// CommonJS export for Node.js (used by verification and tests)
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    aggregateDisruptionsByType,
-    updateTransitBoxes,
-  };
-}
+// ES module export for Node.js tests
+export { aggregateDisruptionsByType, updateTransitBoxes };
 
 // Browser global export for client-side usage
 if (typeof window !== 'undefined') {
