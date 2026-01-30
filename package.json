@@ -1,0 +1,38 @@
+{
+  "name": "isbvgfuckedup",
+  "version": "1.0.0",
+  "description": "Is BVG fucked up? Real-time Berlin transit status.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest tests/integration/",
+    "lint": "eslint src/ tests/",
+    "coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "bvg",
+    "berlin",
+    "transit",
+    "status"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "hafas-client": "^6.3.6",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "supertest": "^7.0.0"
+  }
+}
