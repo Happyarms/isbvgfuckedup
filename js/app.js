@@ -611,33 +611,99 @@
   }
 
   /**
+   * Check if localStorage is available and accessible.
+   * Handles cases like private browsing mode or disabled storage.
+   * @returns {boolean} True if localStorage can be used
+   */
+  function isLocalStorageAvailable() {
+    try {
+      var testKey = '__bvg_storage_test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Validate that data is an array of strings.
+   * @param {*} data - Data to validate
+   * @returns {boolean} True if data is a valid array of strings
+   */
+  function isValidFilterData(data) {
+    if (!Array.isArray(data)) {
+      return false;
+    }
+    // Ensure all elements are strings
+    for (var i = 0; i < data.length; i++) {
+      if (typeof data[i] !== 'string') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Save selected line filters to localStorage.
+   * Handles edge cases: localStorage disabled, quota exceeded, private browsing.
    * @param {Array<string>} selectedLines - Array of line names to save
    */
   function saveFiltersToLocalStorage(selectedLines) {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
+
     try {
       var data = JSON.stringify(selectedLines || []);
       localStorage.setItem('bvg-line-filters', data);
     } catch (error) {
       // Silently handle localStorage errors (e.g., quota exceeded, private browsing)
+      // Clear potentially corrupted data
+      try {
+        localStorage.removeItem('bvg-line-filters');
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
   }
 
   /**
    * Load selected line filters from localStorage.
-   * @returns {Array<string>} Array of saved line names, or empty array if none saved
+   * Handles edge cases: localStorage disabled, corrupt JSON, invalid data types.
+   * @returns {Array<string>} Array of saved line names, or empty array if none saved/invalid
    */
   function loadFiltersFromLocalStorage() {
+    if (!isLocalStorageAvailable()) {
+      return [];
+    }
+
     try {
       var data = localStorage.getItem('bvg-line-filters');
-      if (data) {
-        var parsed = JSON.parse(data);
-        return Array.isArray(parsed) ? parsed : [];
+      if (!data) {
+        return [];
       }
+
+      var parsed = JSON.parse(data);
+
+      // Validate parsed data is an array of strings
+      if (!isValidFilterData(parsed)) {
+        // Clear corrupt data
+        localStorage.removeItem('bvg-line-filters');
+        return [];
+      }
+
+      return parsed;
     } catch (error) {
-      // Silently handle localStorage errors (e.g., invalid JSON, access denied)
+      // Handle invalid JSON or other errors
+      try {
+        // Clear corrupt data
+        localStorage.removeItem('bvg-line-filters');
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      return [];
     }
-    return [];
   }
 
   /**
