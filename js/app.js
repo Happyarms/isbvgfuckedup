@@ -1032,6 +1032,11 @@
         var result = analyzeStatus(departuresToAnalyze, isFiltered);
         updateUI(result);
 
+        // Update transit boxes with aggregated data by type
+        // Always use full departure data (not filtered) to show overall transit status
+        var aggregatedData = aggregateDisruptionsByType(appState.allDepartures);
+        updateTransitBoxes(aggregatedData);
+
         // Update active filter chips to reflect current state
         if (appState.selectedLines && appState.selectedLines.length > 0) {
           renderActiveFilters(appState.selectedLines);
