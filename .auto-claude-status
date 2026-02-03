@@ -3,23 +3,23 @@
   "spec": "015-transportmittel-box-ansicht-mit-status-bersicht",
   "state": "building",
   "subtasks": {
-    "completed": 0,
+    "completed": 7,
     "total": 9,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "HTML Structure",
+    "current": "Testing & Verification",
     "id": null,
-    "total": 1
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 1,
+    "number": 8,
     "started_at": "2026-02-03T08:28:17.934711"
   },
-  "last_update": "2026-02-03T08:28:18.015228"
+  "last_update": "2026-02-03T08:47:44.651975"
 }
