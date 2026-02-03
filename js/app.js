@@ -21,7 +21,8 @@
       { id: '900180007', name: 'Schlossplatz Köpenick' },
       { id: '900056102', name: 'Nollendorfplatz' },
       { id: '900120004', name: 'Warschauer Straße' },
-      { id: '900029302', name: 'Rathaus Spandau' }
+      { id: '900029302', name: 'Rathaus Spandau' },
+      { id: '900192001', name: 'Schöneweide' }
     ],
     THRESHOLD_DEGRADED: 0.3,
     THRESHOLD_FUCKED: 0.6,
