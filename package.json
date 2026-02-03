@@ -1,19 +1,6 @@
 {
   "name": "isbvgfuckedup",
   "version": "1.0.0",
-  "description": "BVG Status Monitor - Is BVG Fucked Up?",
-  "scripts": {
-    "test": "jest",
-    "dev": "python3 -m http.server 8000"
-  },
-  "devDependencies": {
-    "jest": "^29.7.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/tests/**/*.test.js"
-    ]
   "description": "Is BVG fucked up? Real-time Berlin transit status.",
   "type": "module",
   "main": "src/server.js",
