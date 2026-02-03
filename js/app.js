@@ -15,7 +15,13 @@
       { id: '900003201', name: 'Berlin Hauptbahnhof' },
       { id: '900100003', name: 'Alexanderplatz' },
       { id: '900023201', name: 'Zoologischer Garten' },
-      { id: '900100001', name: 'Friedrichstrasse' }
+      { id: '900100001', name: 'Friedrichstrasse' },
+      { id: '900071154', name: 'Porschestr.' },
+      { id: '900070301', name: 'Alt-Mariendorf' },
+      { id: '900180007', name: 'Schlossplatz Köpenick' },
+      { id: '900056102', name: 'Nollendorfplatz' },
+      { id: '900120004', name: 'Warschauer Straße' },
+      { id: '900029302', name: 'Rathaus Spandau' }
     ],
     THRESHOLD_DEGRADED: 0.3,
     THRESHOLD_FUCKED: 0.6,
