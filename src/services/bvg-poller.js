@@ -1,6 +1,6 @@
 import config from '../config.js';
 import { createBvgClient } from './bvg-client.js';
-import { determineStatus } from '../models/transit-status.js';
+import { determineStatus, aggregateDisruptionsByType } from '../models/transit-status.js';
 import { getStatusText } from './status-text.js';
 
 /**
@@ -27,10 +27,12 @@ const STATIONS = [
 function unknownStatus() {
   const { state, metrics } = determineStatus([]);
   const text = getStatusText(state);
+  const transitBoxes = aggregateDisruptionsByType([]);
   return {
     state,
     metrics,
     text,
+    transitBoxes,
     timestamp: null,
     stale: true,
   };
@@ -92,11 +94,13 @@ export function createPoller(overrides = {}) {
 
       const { state, metrics } = determineStatus(allDepartures);
       const text = getStatusText(state);
+      const transitBoxes = aggregateDisruptionsByType(allDepartures);
 
       cache = {
         state,
         metrics,
         text,
+        transitBoxes,
         timestamp: Date.now(),
         stale: false,
       };

@@ -76,3 +76,77 @@ export function determineStatus(departures) {
     },
   };
 }
+
+/**
+ * Aggregate disruptions by transit type for the status boxes.
+ *
+ * Takes an array of HAFAS departure objects and groups them by transit type,
+ * counting delayed and cancelled departures for each type.
+ *
+ * Transit type mapping (HAFAS product to display name):
+ *   - 'bus' → Bus
+ *   - 'subway' → U-Bahn
+ *   - 'tram' → Tram
+ *   - 'suburban' → S-Bahn
+ *
+ * A departure is "delayed" when: !cancelled AND delay > threshold
+ * A departure is "cancelled" when: cancelled === true
+ *
+ * @param {Array} departures - Array of HAFAS departure objects
+ * @returns {Object} Aggregated counts by transit type:
+ *   {
+ *     bus: { delayed: number, cancelled: number },
+ *     ubahn: { delayed: number, cancelled: number },
+ *     tram: { delayed: number, cancelled: number },
+ *     sbahn: { delayed: number, cancelled: number }
+ *   }
+ */
+export function aggregateDisruptionsByType(departures) {
+  const result = {
+    bus: { delayed: 0, cancelled: 0 },
+    ubahn: { delayed: 0, cancelled: 0 },
+    tram: { delayed: 0, cancelled: 0 },
+    sbahn: { delayed: 0, cancelled: 0 },
+  };
+
+  if (!Array.isArray(departures) || departures.length === 0) {
+    return result;
+  }
+
+  const { thresholds } = config;
+
+  for (const departure of departures) {
+    if (!departure.line || !departure.line.product) {
+      continue;
+    }
+
+    const product = departure.line.product;
+    const isDelayed = !departure.cancelled &&
+                      typeof departure.delay === 'number' &&
+                      departure.delay > thresholds.delay;
+    const isCancelled = departure.cancelled === true;
+
+    switch (product) {
+      case 'bus':
+        if (isDelayed) result.bus.delayed++;
+        if (isCancelled) result.bus.cancelled++;
+        break;
+      case 'subway':
+        if (isDelayed) result.ubahn.delayed++;
+        if (isCancelled) result.ubahn.cancelled++;
+        break;
+      case 'tram':
+        if (isDelayed) result.tram.delayed++;
+        if (isCancelled) result.tram.cancelled++;
+        break;
+      case 'suburban':
+        if (isDelayed) result.sbahn.delayed++;
+        if (isCancelled) result.sbahn.cancelled++;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return result;
+}
