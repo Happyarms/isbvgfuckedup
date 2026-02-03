@@ -34,7 +34,7 @@
       </div>
     </section>
 
-    <section class="transit-boxes" hidden>
+    <section id="metrics" class="metrics transit-boxes" hidden>
       <div class="transit-box" data-type="bus">
         <h3>Bus</h3>
         <div>
@@ -89,52 +89,6 @@
       <div class="metric-card">
         <span class="metric-label">Ausgefallen</span>
         <span id="cancel-pct" class="metric-value">–</span>
-      </div>
-    </section>
-	
-	
-    <!-- Line Filter Section -->
-    <section id="line-filter" class="line-filter" hidden>
-      <h2 class="filter-heading">Linien filtern</h2>
-
-      <div class="filter-controls">
-        <div class="filter-select-container">
-          <label for="line-select" class="filter-label">
-            Wähle Linien aus:
-          </label>
-          <select
-            id="line-select"
-            class="line-select"
-            multiple
-            size="5"
-            aria-label="Wähle eine oder mehrere Linien zum Filtern"
-            aria-describedby="filter-description"
-          >
-            <!-- Populated dynamically via JavaScript -->
-          </select>
-          <p id="filter-description" class="filter-description">
-            Halte Strg (Windows) oder Cmd (Mac) gedrückt, um mehrere Linien auszuwählen.
-          </p>
-        </div>
-
-        <button
-          id="filter-reset"
-          class="filter-reset-button"
-          type="button"
-          aria-label="Alle Filter zurücksetzen"
-        >
-          Alle Filter zurücksetzen
-        </button>
-      </div>
-
-      <div
-        id="active-filters"
-        class="active-filters"
-        role="region"
-        aria-label="Aktive Filter"
-        aria-live="polite"
-      >
-        <!-- Active filter chips populated dynamically via JavaScript -->
       </div>
     </section>
 
