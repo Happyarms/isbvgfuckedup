@@ -43,6 +43,7 @@ export function createRoutes(poller) {
       message: status.text.message,
       emoji: status.text.emoji,
       metrics: status.metrics,
+      transitBoxes: status.transitBoxes,
       stale: status.stale,
       timestamp,
     });

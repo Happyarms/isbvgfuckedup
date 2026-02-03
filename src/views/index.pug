@@ -12,6 +12,45 @@ block content
       span.status-emoji= emoji
       .status-text= message
 
+    //- Transit boxes showing disruptions by type
+    if transitBoxes
+      .transit-boxes
+        .transit-box(data-type='bus')
+          h3 Bus
+          div
+            span Verspätet:
+            span.count= transitBoxes.bus.delayed
+          div
+            span Ausgefallen:
+            span.count= transitBoxes.bus.cancelled
+
+        .transit-box(data-type='ubahn')
+          h3 U-Bahn
+          div
+            span Verspätet:
+            span.count= transitBoxes.ubahn.delayed
+          div
+            span Ausgefallen:
+            span.count= transitBoxes.ubahn.cancelled
+
+        .transit-box(data-type='tram')
+          h3 Tram
+          div
+            span Verspätet:
+            span.count= transitBoxes.tram.delayed
+          div
+            span Ausgefallen:
+            span.count= transitBoxes.tram.cancelled
+
+        .transit-box(data-type='sbahn')
+          h3 S-Bahn
+          div
+            span Verspätet:
+            span.count= transitBoxes.sbahn.delayed
+          div
+            span Ausgefallen:
+            span.count= transitBoxes.sbahn.cancelled
+
     //- Metrics section
     if metrics && metrics.totalServices > 0
       .metrics
