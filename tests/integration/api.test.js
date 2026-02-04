@@ -55,6 +55,12 @@ function createMockPoller(statusOverrides = {}) {
       message: 'Nein, BVG l\u00E4uft.',
       emoji: '\u2705',
     },
+    transitBoxes: {
+      bus: { delayed: 0, cancelled: 0 },
+      ubahn: { delayed: 0, cancelled: 0 },
+      tram: { delayed: 0, cancelled: 0 },
+      sbahn: { delayed: 0, cancelled: 0 },
+    },
     timestamp: Date.now(),
     stale: false,
   };
@@ -307,6 +313,52 @@ describe('API integration', () => {
       expect(res.body.message).toBe('Ja, BVG ist gefickt.');
     });
 
+    it('returns emoji in the response body', async () => {
+      const poller = createMockPoller({
+        text: {
+          cssClass: 'status-fucked',
+          message: 'Ja, BVG ist gefickt.',
+          emoji: '\uD83D\uDD25',
+        },
+      });
+      const app = createTestApp(poller);
+
+      const res = await request(app).get('/api/status');
+
+      expect(res.body.emoji).toBe('\uD83D\uDD25');
+    });
+
+    it('returns cssClass matching the state in the response body', async () => {
+      const poller = createMockPoller({
+        state: 'FUCKED',
+        text: {
+          cssClass: 'status-fucked',
+          message: 'Ja, BVG ist gefickt.',
+          emoji: '\uD83D\uDD25',
+        },
+      });
+      const app = createTestApp(poller);
+
+      const res = await request(app).get('/api/status');
+
+      expect(res.body.cssClass).toBe('status-fucked');
+    });
+
+    it('returns transitBoxes with the expected shape', async () => {
+      const transitBoxes = {
+        bus: { delayed: 2, cancelled: 1 },
+        ubahn: { delayed: 0, cancelled: 3 },
+        tram: { delayed: 1, cancelled: 0 },
+        sbahn: { delayed: 4, cancelled: 2 },
+      };
+      const poller = createMockPoller({ transitBoxes });
+      const app = createTestApp(poller);
+
+      const res = await request(app).get('/api/status');
+
+      expect(res.body.transitBoxes).toEqual(transitBoxes);
+    });
+
     it('includes CORS headers', async () => {
       const poller = createMockPoller();
       const app = createTestApp(poller);
@@ -326,6 +378,9 @@ describe('API integration', () => {
       expect(res.body).toHaveProperty('state');
       expect(res.body).toHaveProperty('metrics');
       expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('emoji');
+      expect(res.body).toHaveProperty('cssClass');
+      expect(res.body).toHaveProperty('transitBoxes');
       expect(res.body).toHaveProperty('timestamp');
       expect(res.body).toHaveProperty('stale');
     });
