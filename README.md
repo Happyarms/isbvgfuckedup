@@ -280,6 +280,30 @@ Returns the current BVG system status as JSON. CORS-enabled for third-party cons
 | `timestamp`               | string  | ISO 8601 timestamp of last data fetch         |
 | `stale`                   | boolean | `true` if data is older than staleness threshold |
 
+### `GET /api/voice`
+
+Returns a voice-optimized response with the current BVG status, including SSML markup for text-to-speech synthesis. CORS-enabled.
+
+**Response:**
+
+```json
+{
+  "text": "BVG ist ein bisschen gefickt.",
+  "ssml": "<speak>BVG ist ein bisschen gefickt.</speak>",
+  "state": "DEGRADED",
+  "stale": false
+}
+```
+
+**Fields:**
+
+| Field    | Type    | Description                                            |
+|----------|---------|--------------------------------------------------------|
+| `text`   | string  | Plain-text status message suitable for TTS             |
+| `ssml`   | string  | SSML-wrapped message for speech synthesis              |
+| `state`  | string  | `FUCKED`, `DEGRADED`, `FINE`, or `UNKNOWN`             |
+| `stale`  | boolean | `true` if data is older than staleness threshold       |
+
 ### `GET /`
 
 Returns the HTML status page rendered with Pug templates. The page includes:
@@ -289,6 +313,10 @@ Returns the HTML status page rendered with Pug templates. The page includes:
 - Last update timestamp (German locale)
 - Auto-refresh countdown (60 seconds)
 - Staleness warning when data is outdated
+
+## Voice Assistant Integration
+
+The `/api/voice` endpoint provides a voice-friendly interface to the BVG status, returning both plain text and SSML-formatted responses for use with voice assistants like Siri, Google Assistant, or Alexa. See [docs/voice-assistant-setup.md](docs/voice-assistant-setup.md) for a full setup guide, including Siri Shortcuts configuration.
 
 ## Testing
 
