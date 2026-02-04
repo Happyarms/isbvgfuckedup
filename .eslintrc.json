@@ -25,6 +25,12 @@
         "browser": true,
         "node": false
       }
+    },
+    {
+      "files": ["tests/setup.js", "tests/renderDisruptions.test.js", "tests/uiHelpers.test.js"],
+      "env": {
+        "browser": true
+      }
     }
   ]
 }

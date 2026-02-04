@@ -31,7 +31,7 @@ function isBusDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
-  var product = disruption.line.product.toLowerCase();
+  const product = disruption.line.product.toLowerCase();
   return product === 'bus';
 }
 
@@ -44,7 +44,7 @@ function isTramDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
-  var product = disruption.line.product.toLowerCase();
+  const product = disruption.line.product.toLowerCase();
   return product === 'tram';
 }
 
@@ -57,7 +57,7 @@ function isSBahnDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
-  var product = disruption.line.product.toLowerCase();
+  const product = disruption.line.product.toLowerCase();
   return product === 'suburban';
 }
 
@@ -70,7 +70,7 @@ function isUBahnDisruption(disruption) {
   if (!disruption || !disruption.line || !disruption.line.product) {
     return false;
   }
-  var product = disruption.line.product.toLowerCase();
+  const product = disruption.line.product.toLowerCase();
   return product === 'subway';
 }
 
