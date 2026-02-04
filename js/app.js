@@ -22,7 +22,17 @@
       { id: '900056102', name: 'Nollendorfplatz' },
       { id: '900120004', name: 'Warschauer Straße' },
       { id: '900029302', name: 'Rathaus Spandau' },
-      { id: '900192001', name: 'Schöneweide' }
+      { id: '900120003', name: 'S Ostkreuz Bhf (Berlin)' },
+      { id: '900024102', name: 'S Westkreuz (Berlin)' },
+      { id: '900058101', name: 'S Südkreuz Bhf (Berlin)' },
+      { id: '900007102', name: 'S+U Gesundbrunnen Bhf (Berlin)' },
+      { id: '900120001', name: 'S+U Frankfurter Allee (Berlin)' },
+      { id: '900078201', name: 'S+U Neukölln (Berlin)' },
+      { id: '900192001', name: 'S Schöneweide Bhf (Berlin)' },
+      { id: '900078101', name: 'U Hermannplatz (Berlin)' },
+      { id: '900130002', name: 'S+U Pankow (Berlin)' },
+      { id: '900083201', name: 'U Rudow (Berlin)' },
+      { id: '900096101', name: 'S+U Wittenau (Berlin)' }
     ],
     THRESHOLD_DEGRADED: 0.3,
     THRESHOLD_FUCKED: 0.6,
@@ -620,7 +630,7 @@
 
       var detailsText = '';
       if (disruption.direction) {
-        detailsText += 'Richtung ' + disruption.direction;
+        detailsText += 'Von: ' + disruption.department + 'Richtung ' + disruption.direction;
       }
 
       // Determine disruption type from object or parameter
