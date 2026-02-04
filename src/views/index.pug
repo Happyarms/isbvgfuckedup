@@ -19,37 +19,37 @@ block content
           h3 Bus
           div
             span Verspätet:
-            span.count= transitBoxes.bus.delayed
+            span.count#bus-delayed-count= transitBoxes.bus.delayed
           div
             span Ausgefallen:
-            span.count= transitBoxes.bus.cancelled
+            span.count#bus-cancelled-count= transitBoxes.bus.cancelled
 
         .transit-box(data-type='ubahn')
           h3 U-Bahn
           div
             span Verspätet:
-            span.count= transitBoxes.ubahn.delayed
+            span.count#ubahn-delayed-count= transitBoxes.ubahn.delayed
           div
             span Ausgefallen:
-            span.count= transitBoxes.ubahn.cancelled
+            span.count#ubahn-cancelled-count= transitBoxes.ubahn.cancelled
 
         .transit-box(data-type='tram')
           h3 Tram
           div
             span Verspätet:
-            span.count= transitBoxes.tram.delayed
+            span.count#tram-delayed-count= transitBoxes.tram.delayed
           div
             span Ausgefallen:
-            span.count= transitBoxes.tram.cancelled
+            span.count#tram-cancelled-count= transitBoxes.tram.cancelled
 
         .transit-box(data-type='sbahn')
           h3 S-Bahn
           div
             span Verspätet:
-            span.count= transitBoxes.sbahn.delayed
+            span.count#sbahn-delayed-count= transitBoxes.sbahn.delayed
           div
             span Ausgefallen:
-            span.count= transitBoxes.sbahn.cancelled
+            span.count#sbahn-cancelled-count= transitBoxes.sbahn.cancelled
 
     //- Metrics section
     if metrics && metrics.totalServices > 0
