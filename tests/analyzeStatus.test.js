@@ -43,17 +43,17 @@ function analyzeStatus(departures) {
     };
   }
 
-  var total = departures.length;
-  var cancelledCount = 0;
-  var delayedCount = 0;
-  var cancelled = [];
-  var delayed = [];
+  const total = departures.length;
+  let cancelledCount = 0;
+  let delayedCount = 0;
+  const cancelled = [];
+  const delayed = [];
 
   departures.forEach(function (dep) {
     // Extract source URL from remarks if available
-    var sourceUrl = null;
+    let sourceUrl = null;
     if (dep.remarks && Array.isArray(dep.remarks)) {
-      for (var i = 0; i < dep.remarks.length; i++) {
+      for (let i = 0; i < dep.remarks.length; i++) {
         if (dep.remarks[i].url) {
           sourceUrl = dep.remarks[i].url;
           break;
@@ -74,7 +74,7 @@ function analyzeStatus(departures) {
     }
 
     // delay is in seconds; null/undefined/0 means on-time
-    var delay = dep.delay;
+    const delay = dep.delay;
     if (delay && delay > CONFIG.DELAY_THRESHOLD_SECONDS) {
       delayedCount++;
       delayed.push({
@@ -88,11 +88,11 @@ function analyzeStatus(departures) {
     }
   });
 
-  var delayPct = delayedCount / total;
-  var cancelPct = cancelledCount / total;
-  var disruptionPct = (delayedCount + cancelledCount) / total;
+  const delayPct = delayedCount / total;
+  const cancelPct = cancelledCount / total;
+  const disruptionPct = (delayedCount + cancelledCount) / total;
 
-  var status = 'normal';
+  let status = 'normal';
   if (disruptionPct >= CONFIG.THRESHOLD_FUCKED) {
     status = 'fucked';
   } else if (disruptionPct >= CONFIG.THRESHOLD_DEGRADED) {

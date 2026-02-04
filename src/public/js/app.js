@@ -67,20 +67,20 @@ function aggregateDisruptionsByType(departures) {
     // Map HAFAS product type to our transit type and update counts
     switch (product) {
       case 'bus':
-        if (isDelayed) result.bus.delayed++;
-        if (isCancelled) result.bus.cancelled++;
+        if (isDelayed) {result.bus.delayed++;}
+        if (isCancelled) {result.bus.cancelled++;}
         break;
       case 'subway':
-        if (isDelayed) result.ubahn.delayed++;
-        if (isCancelled) result.ubahn.cancelled++;
+        if (isDelayed) {result.ubahn.delayed++;}
+        if (isCancelled) {result.ubahn.cancelled++;}
         break;
       case 'tram':
-        if (isDelayed) result.tram.delayed++;
-        if (isCancelled) result.tram.cancelled++;
+        if (isDelayed) {result.tram.delayed++;}
+        if (isCancelled) {result.tram.cancelled++;}
         break;
       case 'suburban':
-        if (isDelayed) result.sbahn.delayed++;
-        if (isCancelled) result.sbahn.cancelled++;
+        if (isDelayed) {result.sbahn.delayed++;}
+        if (isCancelled) {result.sbahn.cancelled++;}
         break;
       // Ignore other product types (regional, express, ferry, etc.)
       default:

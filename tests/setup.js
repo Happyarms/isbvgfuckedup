@@ -5,6 +5,15 @@
 
 // Import Jest globals for ES modules
 import { jest } from '@jest/globals';
+import { Window } from 'happy-dom';
+
+/* ---------- Global DOM Environment ---------- */
+
+// Provide a global DOM environment for tests that use document APIs.
+// Mirrors the approach used in transit-boxes-ui.test.js.
+const happyWindow = new Window();
+globalThis.document = happyWindow.document;
+globalThis.window = happyWindow;
 
 /* ---------- Global Test Configuration ---------- */
 
