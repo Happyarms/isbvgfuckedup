@@ -1,8 +1,9 @@
 /**
  * Client-side JavaScript for BVG Status Page.
  *
- * Follows the IsSeptaFcked pattern: simple page reload for refresh.
- * Auto-refreshes the page every 60 seconds with a visible countdown.
+ * Auto-refreshes status every 60 seconds via fetch('/api/status') and
+ * surgically patches only the changed DOM elements — no full page reload.
+ * Falls back to window.location.reload() if the fetch fails.
  *
  * Also handles dark mode theme detection and initialization.
  */
@@ -115,18 +116,123 @@
   }
 
   /**
-   * Tick the countdown. When it reaches zero, reload the page.
+   * Tick the countdown. When it reaches zero, fetch and patch in place.
    */
   function tick() {
     secondsRemaining--;
 
     if (secondsRemaining <= 0) {
       clearInterval(timerInterval);
-      window.location.reload();
+      fetchAndPatch();
       return;
     }
 
     updateCountdown();
+  }
+
+  /**
+   * Fetch the latest status from /api/status and patch the DOM in place.
+   * Falls back to a full page reload if the fetch or parsing fails.
+   * Restarts the countdown timer after a successful patch.
+   */
+  function fetchAndPatch() {
+    fetch('/api/status')
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        patchDOM(data);
+        startTimer();
+      })
+      .catch(function () {
+        window.location.reload();
+      });
+  }
+
+  /**
+   * Patch the DOM in place with fresh data from the API response.
+   * Only the changed elements are updated — no re-render or flicker.
+   *
+   * @param {Object} data - Parsed JSON from /api/status:
+   *   { state, metrics, transitBoxes, message, emoji, cssClass, timestamp, stale }
+   */
+  function patchDOM(data) {
+    // (1) Body className and .status className to the new status CSS class
+    document.body.className = data.cssClass || '';
+    const statusEl = document.querySelector('.status');
+    if (statusEl) {
+      statusEl.className = 'status ' + (data.cssClass || '');
+    }
+
+    // (2) Status emoji
+    const emojiEl = document.querySelector('.status-emoji');
+    if (emojiEl) {
+      emojiEl.textContent = data.emoji || '';
+    }
+
+    // (3) Status text (message)
+    const textEl = document.querySelector('.status-text');
+    if (textEl) {
+      textEl.textContent = data.message || '';
+    }
+
+    // (4) Metric values — may not exist if totalServices was 0 on initial render
+    const metricValues = document.querySelectorAll('.metric-value');
+    if (metricValues.length >= 3 && data.metrics) {
+      metricValues[0].textContent = (data.metrics.percentDelayed || 0) + '%';
+      metricValues[1].textContent = (data.metrics.percentCancelled || 0) + '%';
+      metricValues[2].textContent = String(data.metrics.totalServices || 0);
+    }
+
+    // (5) Transit box counts — mirrors app.js updateTransitBoxes() exactly
+    const transitTypes = ['bus', 'ubahn', 'tram', 'sbahn'];
+    if (data.transitBoxes) {
+      for (const type of transitTypes) {
+        if (!data.transitBoxes[type]) {
+          continue;
+        }
+
+        const typeData = data.transitBoxes[type];
+
+        const delayedEl = document.getElementById(type + '-delayed-count');
+        if (delayedEl) {
+          delayedEl.textContent = String(typeData.delayed || 0);
+        }
+
+        const cancelledEl = document.getElementById(type + '-cancelled-count');
+        if (cancelledEl) {
+          cancelledEl.textContent = String(typeData.cancelled || 0);
+        }
+      }
+    }
+
+    // (6) Stale warning — create before .footer-info if stale and missing; remove if not stale
+    const staleWarning = document.querySelector('.stale-warning');
+    if (data.stale) {
+      if (!staleWarning) {
+        const warning = document.createElement('div');
+        warning.className = 'stale-warning';
+        warning.textContent = 'Daten sind veraltet.';
+        const footerInfo = document.querySelector('.footer-info');
+        if (footerInfo) {
+          footerInfo.parentNode.insertBefore(warning, footerInfo);
+        }
+      }
+    } else {
+      if (staleWarning) {
+        staleWarning.parentNode.removeChild(staleWarning);
+      }
+    }
+
+    // (7) Timestamp — formatted as de-DE locale string
+    const timestampEl = document.querySelector('.timestamp');
+    if (timestampEl && data.timestamp) {
+      timestampEl.textContent =
+        'Zuletzt aktualisiert: ' + new Date(data.timestamp).toLocaleString('de-DE');
+    }
   }
 
   /**

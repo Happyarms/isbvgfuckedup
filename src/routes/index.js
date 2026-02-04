@@ -61,7 +61,10 @@ export function createRoutes(poller) {
     res.json({
       state: status.state,
       metrics: status.metrics,
+      transitBoxes: status.transitBoxes,
       message: status.text.message,
+      emoji: status.text.emoji,
+      cssClass: status.text.cssClass,
       timestamp: status.timestamp,
       stale: status.stale,
     });
