@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "015-transportmittel-box-ansicht-mit-status-bersicht",
+  "spec": "019-replace-full-page-reload-with-incremental-fetch-an",
   "state": "building",
   "subtasks": {
-    "completed": 7,
-    "total": 9,
+    "completed": 5,
+    "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Testing & Verification",
+    "current": "Full Test Suite & Verification",
     "id": null,
-    "total": 3
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
-    "started_at": "2026-02-03T08:28:17.934711"
+    "number": 7,
+    "started_at": "2026-02-04T09:30:25.269456"
   },
-  "last_update": "2026-02-03T08:47:44.651975"
+  "last_update": "2026-02-04T09:54:10.265187"
 }
