@@ -10,6 +10,7 @@
  */
 
 import { Router } from 'express';
+import { createVoiceRoutes } from './voice.js';
 
 /**
  * Create route handlers wired to the given poller.
@@ -66,6 +67,13 @@ export function createRoutes(poller) {
       stale: status.stale,
     });
   });
+
+  /**
+   * /api/voice — Voice-assistant endpoints (Siri Shortcuts & Google Assistant).
+   *
+   * Delegated to the voice sub-router; see routes/voice.js for details.
+   */
+  router.use('/api/voice', createVoiceRoutes(poller));
 
   return router;
 }
