@@ -35,8 +35,9 @@
     </section>
 
     <section id="metrics" class="metrics transit-boxes" hidden>
-      <div class="transit-box" data-type="bus">
+      <div class="transit-box" id="transit-box-bus" data-type="bus">
         <h3>Bus</h3>
+        <span class="transit-box-status" id="bus-status-text"></span>
         <div>
           <span>Verspätet:</span>
           <span id="bus-delayed-count"></span>
@@ -46,8 +47,9 @@
           <span id="bus-cancelled-count"></span>
         </div>
       </div>
-      <div class="transit-box" data-type="ubahn">
+      <div class="transit-box" id="transit-box-ubahn" data-type="ubahn">
         <h3>U-Bahn</h3>
+        <span class="transit-box-status" id="ubahn-status-text"></span>
         <div>
           <span>Verspätet:</span>
           <span id="ubahn-delayed-count"></span>
@@ -57,8 +59,9 @@
           <span id="ubahn-cancelled-count"></span>
         </div>
       </div>
-      <div class="transit-box" data-type="tram">
+      <div class="transit-box" id="transit-box-tram" data-type="tram">
         <h3>Tram</h3>
+        <span class="transit-box-status" id="tram-status-text"></span>
         <div>
           <span>Verspätet:</span>
           <span id="tram-delayed-count"></span>
@@ -68,8 +71,9 @@
           <span id="tram-cancelled-count"></span>
         </div>
       </div>
-      <div class="transit-box" data-type="sbahn">
+      <div class="transit-box" id="transit-box-sbahn" data-type="sbahn">
         <h3>S-Bahn</h3>
+        <span class="transit-box-status" id="sbahn-status-text"></span>
         <div>
           <span>Verspätet:</span>
           <span id="sbahn-delayed-count"></span>

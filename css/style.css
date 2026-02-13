@@ -250,6 +250,30 @@ main {
   color: var(--color-text);
 }
 
+/* --- Transit Box Status Coloring --- */
+.transit-box.box-normal {
+  background: var(--color-normal);
+  border-color: var(--color-normal);
+}
+
+.transit-box.box-degraded {
+  background: var(--color-degraded);
+  border-color: var(--color-degraded);
+}
+
+.transit-box.box-fucked {
+  background: var(--color-fucked);
+  border-color: var(--color-fucked);
+}
+
+.transit-box-status {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
+}
+
 /* ---------- Timestamp Section ---------- */
 .timestamp-section {
   display: flex;

@@ -335,29 +335,52 @@
   }
 
   /**
+   * Analyze status for each transit type separately.
+   * Filters departures by product type and runs analyzeStatus on each group.
+   *
+   * @param {Array} departures - Array of HAFAS departure objects
+   * @returns {Object} Per-type status results:
+   *   { bus: result, ubahn: result, tram: result, sbahn: result }
+   */
+  function analyzeStatusByType(departures) {
+    var productMap = {
+      bus: 'bus',
+      ubahn: 'subway',
+      tram: 'tram',
+      sbahn: 'suburban'
+    };
+
+    var result = {};
+    var types = ['bus', 'ubahn', 'tram', 'sbahn'];
+
+    for (var i = 0; i < types.length; i++) {
+      var type = types[i];
+      var product = productMap[type];
+
+      var filtered = (departures || []).filter(function (dep) {
+        return dep.line && dep.line.product === product;
+      });
+
+      result[type] = analyzeStatus(filtered, false);
+    }
+
+    return result;
+  }
+
+  var BOX_STATUS_TEXT = {
+    normal: 'OK',
+    degraded: 'NAJA',
+    fucked: 'FUCKED',
+    unknown: '?'
+  };
+
+  /**
    * Update the transit status boxes in the DOM.
    *
-   * Takes aggregated disruption counts by transit type and updates the corresponding
-   * DOM elements. This function is intended for client-side use to dynamically update
-   * the transit boxes without a full page reload.
-   *
-   * Expected aggregatedData structure (from aggregateDisruptionsByType):
-   * {
-   *   bus: { delayed: number, cancelled: number },
-   *   ubahn: { delayed: number, cancelled: number },
-   *   tram: { delayed: number, cancelled: number },
-   *   sbahn: { delayed: number, cancelled: number }
-   * }
-   *
-   * Updates these DOM elements by ID:
-   * - bus-delayed-count, bus-cancelled-count
-   * - ubahn-delayed-count, ubahn-cancelled-count
-   * - tram-delayed-count, tram-cancelled-count
-   * - sbahn-delayed-count, sbahn-cancelled-count
-   *
    * @param {Object} aggregatedData - Aggregated counts from aggregateDisruptionsByType
+   * @param {Object} [perTypeStatus] - Per-type analysis results from analyzeStatusByType
    */
-  function updateTransitBoxes(aggregatedData) {
+  function updateTransitBoxes(aggregatedData, perTypeStatus) {
     // Validate input
     if (!aggregatedData || typeof aggregatedData !== 'object') {
       return;
@@ -380,15 +403,32 @@
       // Update delayed count
       var delayedElement = document.getElementById(type + '-delayed-count');
       if (delayedElement) {
-        // Ensure zero values display as '0' not empty string
         delayedElement.textContent = String(data.delayed || 0);
       }
 
       // Update cancelled count
       var cancelledElement = document.getElementById(type + '-cancelled-count');
       if (cancelledElement) {
-        // Ensure zero values display as '0' not empty string
         cancelledElement.textContent = String(data.cancelled || 0);
+      }
+
+      // Update box status coloring and text
+      var boxElement = document.getElementById('transit-box-' + type);
+      var statusTextElement = document.getElementById(type + '-status-text');
+
+      if (boxElement) {
+        boxElement.classList.remove('box-normal', 'box-degraded', 'box-fucked');
+
+        if (perTypeStatus && perTypeStatus[type]) {
+          var status = perTypeStatus[type].status;
+          if (status === 'normal' || status === 'degraded' || status === 'fucked') {
+            boxElement.classList.add('box-' + status);
+          }
+
+          if (statusTextElement) {
+            statusTextElement.textContent = BOX_STATUS_TEXT[status] || '';
+          }
+        }
       }
     }
   }
@@ -1049,10 +1089,11 @@
         var result = analyzeStatus(departuresToAnalyze, isFiltered);
         updateUI(result);
 
-        // Update transit boxes with aggregated data by type
+        // Update transit boxes with aggregated data and per-type status
         // Always use full departure data (not filtered) to show overall transit status
         var aggregatedData = aggregateDisruptionsByType(appState.allDepartures);
-        updateTransitBoxes(aggregatedData);
+        var perTypeStatus = analyzeStatusByType(appState.allDepartures);
+        updateTransitBoxes(aggregatedData, perTypeStatus);
 
         // Update active filter chips to reflect current state
         if (appState.selectedLines && appState.selectedLines.length > 0) {
@@ -1206,6 +1247,7 @@
     if (typeof module !== 'undefined' && module.exports) {
       exports = module.exports = {
         analyzeStatus: analyzeStatus,
+        analyzeStatusByType: analyzeStatusByType,
         formatPct: formatPct,
         isBusDisruption: isBusDisruption,
         isTramDisruption: isTramDisruption,
