@@ -361,7 +361,21 @@
         return dep.line && dep.line.product === product;
       });
 
-      result[type] = analyzeStatus(filtered, false);
+      var base = analyzeStatus(filtered, false);
+      var total = base.total || 0;
+      var disrupted = (base.delayedCount || 0) + (base.cancelledCount || 0);
+      var ratio = total > 0 ? disrupted / total : 0;
+
+      // Per-type thresholds: stricter than global, with absolute minimums
+      if (disrupted >= 5 && ratio >= 0.3) {
+        base.status = 'fucked';
+      } else if (disrupted >= 3 && ratio >= 0.1) {
+        base.status = 'degraded';
+      } else if (total > 0) {
+        base.status = 'normal';
+      }
+
+      result[type] = base;
     }
 
     return result;
@@ -410,6 +424,12 @@
       var cancelledElement = document.getElementById(type + '-cancelled-count');
       if (cancelledElement) {
         cancelledElement.textContent = String(data.cancelled || 0);
+      }
+
+      // Update total count
+      var totalElement = document.getElementById(type + '-total-count');
+      if (totalElement && perTypeStatus && perTypeStatus[type]) {
+        totalElement.textContent = String(perTypeStatus[type].total || 0);
       }
 
       // Update box status coloring and text

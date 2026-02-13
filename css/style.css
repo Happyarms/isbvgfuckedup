@@ -252,18 +252,18 @@ main {
 
 /* --- Transit Box Status Coloring --- */
 .transit-box.box-normal {
-  background: var(--color-normal);
-  border-color: var(--color-normal);
+  border-left: 4px solid var(--color-normal);
+  background: rgba(39, 174, 96, 0.15);
 }
 
 .transit-box.box-degraded {
-  background: var(--color-degraded);
-  border-color: var(--color-degraded);
+  border-left: 4px solid var(--color-degraded);
+  background: rgba(230, 126, 34, 0.15);
 }
 
 .transit-box.box-fucked {
-  background: var(--color-fucked);
-  border-color: var(--color-fucked);
+  border-left: 4px solid var(--color-fucked);
+  background: rgba(192, 57, 43, 0.15);
 }
 
 .transit-box-status {
