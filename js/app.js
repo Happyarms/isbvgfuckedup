@@ -690,7 +690,11 @@
 
       var detailsText = '';
       if (disruption.direction) {
-        detailsText += 'Von: ' + disruption.department + 'Richtung ' + disruption.direction;
+        var stopName = disruption.stop && disruption.stop.name ? disruption.stop.name : '';
+        if (stopName) {
+          detailsText += 'Ab ' + stopName + ' · ';
+        }
+        detailsText += 'Richtung ' + disruption.direction;
       }
 
       // Determine disruption type from object or parameter
