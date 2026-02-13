@@ -205,8 +205,8 @@ main {
 }
 
 .transit-box {
-  background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 0.75rem;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -253,17 +253,17 @@ main {
 /* --- Transit Box Status Coloring --- */
 .transit-box.box-normal {
   background: var(--color-normal);
-  border-color: var(--color-normal);
+  border: 2px solid rgba(255, 255, 255, 0.35);
 }
 
 .transit-box.box-degraded {
   background: var(--color-degraded);
-  border-color: var(--color-degraded);
+  border: 2px solid rgba(255, 255, 255, 0.35);
 }
 
 .transit-box.box-fucked {
   background: var(--color-fucked);
-  border-color: var(--color-fucked);
+  border: 2px solid rgba(255, 255, 255, 0.35);
 }
 
 .transit-box-status {
