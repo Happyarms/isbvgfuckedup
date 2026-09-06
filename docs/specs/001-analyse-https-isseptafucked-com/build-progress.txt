@@ -1,0 +1,162 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: BVG Transit Status Website (isbvgfuckedup)
+Specification: Build a website similar to isseptafucked.com but for BVG
+Workspace: Managed by orchestrator
+Started: 2026-01-26
+
+Workflow Type: Feature Development
+Rationale: Greenfield feature requiring new website from scratch. Single-service
+           Node.js architecture with external BVG API integration via hafas-client.
+
+=== SESSION 1 (PLANNER) - COMPLETE ===
+
+Phase 0-1: Deep Investigation & Context
+- Explored IsSeptaFcked reference implementation in detail (GitHub: dmuth/IsSeptaFcked)
+- Analyzed poll-and-cache architecture pattern from IsSeptaFcked
+- Verified hafas-client v6.3.6 is actively maintained (last push: Jan 2026)
+- Discovered hafas-client is ESM-only (type: module required)
+- Determined bvg-hafas is just a 16-line wrapper; use hafas-client directly
+- Verified npm packages: hafas-client, express, pug all available
+- Documented IsSeptaFcked patterns: polling loop, status thresholds, text generation
+
+Key Architectural Decisions:
+1. Use hafas-client directly (not bvg-hafas wrapper) - more actively maintained
+2. ESM module system throughout (required by hafas-client)
+3. Poll-and-cache architecture (from IsSeptaFcked, not fetch-on-demand)
+4. Jest with --experimental-vm-modules for ESM test support
+5. Percentage-based disruption thresholds (vs IsSeptaFcked's absolute counts)
+
+Phase Summary:
+1. Phase 1 (Scaffold):     3 subtasks - package.json, dirs/config, npm install
+2. Phase 2 (Status Model): 2 subtasks - transit-status logic, test fixtures
+3. Phase 3 (Service):      2 subtasks - BVG client, poller (PARALLEL with Phase 4)
+4. Phase 4 (Frontend):     2 subtasks - Pug templates, CSS/JS (PARALLEL with Phase 3)
+5. Phase 5 (Server):       1 subtask  - Express server + routes
+6. Phase 6 (Testing):      3 subtasks - unit tests, poller tests, integration tests
+7. Phase 7 (Deployment):   3 subtasks - Dockerfile, README, E2E verification
+
+Total: 7 phases, 16 subtasks
+
+Services Involved:
+- web-server: Node.js 18+ / Express / Pug / hafas-client (ESM)
+
+Technology Stack:
+- Runtime:    Node.js v18+ (ESM required)
+- Framework:  Express.js v4+
+- Templates:  Pug v3+
+- Data:       hafas-client v6.3.6 with BVG profile (ESM-only)
+- Testing:    Jest + Supertest (--experimental-vm-modules)
+- Quality:    ESLint + Prettier
+- Deploy:     Docker (node:18-alpine)
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Parallel group: Phase 3 (Service) + Phase 4 (Frontend)
+  - Both depend only on Phase 2 (Status Model)
+  - No file overlap between them
+  - Both feed into Phase 5 (Server)
+- Recommended workers: 2
+- Speedup estimate: 1.3x faster than sequential
+
+=== CRITICAL GOTCHAS FOR CODER AGENTS ===
+
+1. ESM REQUIRED: hafas-client is ESM-only
+   - package.json MUST have "type": "module"
+   - Use import/export syntax, NOT require()
+   - Jest needs NODE_OPTIONS='--experimental-vm-modules'
+
+2. POLL-AND-CACHE: Do NOT fetch on every request
+   - bvg-poller.js runs on setInterval (60s)
+   - Routes serve pre-computed results from memory cache
+   - First page load gets UNKNOWN until first poll completes
+
+3. DELAY IN SECONDS: HAFAS delay field is in seconds, not minutes
+   - Delayed = delay > 300 (5 minutes)
+
+4. STALENESS: Mark status as UNKNOWN if data > 5 minutes old
+   - On API error, keep serving cached data if not stale
+   - Only mark UNKNOWN when no valid cache exists
+
+5. STATION IDS: Use known BVG station IDs
+   - Berlin Hauptbahnhof: 900003201
+   - Berlin Alexanderplatz: 900100003
+   - Berlin Zoologischer Garten: 900023201
+   - Berlin Friedrichstra\u00DFe: 900100001
+   - Berlin Ostkreuz: 900120005
+
+6. EXPORT FOR TESTING: server.js must export the Express app
+   - Supertest needs access to the app without listening
+   - Poller.start() should be conditional (not during tests)
+
+=== FILES CREATED/UPDATED ===
+
+Spec Directory: .auto-claude/specs/001-analyse-https-isseptafucked-com/
+
+Updated:
+- implementation_plan.json (corrected: 16 subtasks, ESM, poll-and-cache, hafas-client)
+- context.json (deep investigation findings, architecture patterns)
+- project_index.json (complete project configuration with ESM notes)
+- init.sh (environment setup with Node.js 18+ check)
+- build-progress.txt (this file)
+
+NOT COMMITTED:
+- All spec files are gitignored and tracked locally
+- No source code has been written yet
+- No changes to git repository
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source ./.auto-claude/.venv/bin/activate && python ./.auto-claude/run.py --spec 001 --parallel 2
+
+Implementation Order:
+1. Phase 1 (Scaffold) - MUST complete first (npm install)
+2. Phase 2 (Status Model) - Core algorithm
+3. Phase 3 + Phase 4 IN PARALLEL
+   - Worker 1: Phase 3 (BVG Service & Poller)
+   - Worker 2: Phase 4 (Frontend Templates & Styling)
+4. Phase 5 (Express Server & Routes) - wires everything together
+5. Phase 6 (Testing) - unit + integration tests
+6. Phase 7 (Docker, Docs, E2E) - final verification
+
+=== VERIFICATION STRATEGY ===
+
+Risk Level: Medium
+Test Types: Unit + Integration (>80% coverage)
+Security: No scan needed (no auth/payments)
+Staging: Not required
+
+Acceptance Criteria:
+1. All unit tests pass (transit-status + bvg-poller)
+2. All integration tests pass (API routes)
+3. >=80% code coverage on src/
+4. ESLint passes with no errors
+5. Application starts and serves status page
+6. /api/status returns valid JSON
+7. Docker image builds successfully
+8. No hardcoded secrets
+
+=== END SESSION 1 (PLANNER) ===
+
+Status: COMPLETE - Ready for coder agents
+Next: Coder agent processes Phase 1 (Project Scaffolding)
+
+=== SESSION 2 (CODER) - subtask-1-3 ===
+
+Subtask: Run npm install to install all dependencies and verify key packages
+Status: BLOCKED
+
+BLOCKER: The sandbox environment blocks 'npm' and 'node' commands.
+All attempts to run npm install were rejected by the sandbox callback hook.
+The binaries exist at /c/Program Files/nodejs/ but execution is prevented.
+
+To unblock, run manually in this worktree directory:
+  cd C:\vcs\isbvgfuckedup\.auto-claude\worktrees\tasks\001-analyse-https-isseptafucked-com
+  npm install
+  node -e "import('hafas-client').then(() => console.log('OK')).catch(() => console.log('FAIL'))"
+
+Then re-run this subtask or mark it complete manually.
+
+=== END SESSION 2 (CODER) - subtask-1-3 ===

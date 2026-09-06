@@ -1,0 +1,57 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: isbvgfuckedup — Is BVG Fucked Up? (Berlin transit status)
+Task: 019 — Replace full-page reload with incremental fetch-and-DOM-patch
+Workspace: 019-replace-full-page-reload-with-incremental-fetch-an
+Started: 2026-02-04
+
+Workflow Type: simple
+Rationale: Single-service Node.js/Express app. All changes live in one codebase — no cross-service wiring. Logical ordering enforced via phase dependencies.
+
+Session 1 (Planner):
+- Deep-investigated codebase: server.js, routes, poller, template, client JS, CSS, tests
+- Identified 3 critical gaps: API missing emoji+transitBoxes, Pug missing IDs, app.js not loaded browser-side
+- Confirmed test baseline: integration/api.test.js (24 pass), transit-boxes (53 pass)
+- Created context.json, project_index.json
+- Created implementation_plan.json — 5 phases, 6 subtasks
+- Created init.sh
+
+Phase Summary:
+- Phase 1 (Backend API Enhancement): 1 subtask — add emoji/cssClass/transitBoxes to /api/status
+- Phase 2 (Template ID Preparation): 1 subtask — add IDs to transit box count spans in index.pug
+- Phase 3 (Client-Side Fetch & Patch): 1 subtask — replace reload() with fetchAndPatch() in client.js
+- Phase 4 (Test Coverage): 2 subtasks — update api.test.js + create client-patch.test.js
+- Phase 5 (QA Verification): 1 subtask — run full test suite
+
+Services Involved:
+- app (Node.js/Express): routes, template, client JS, tests
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Recommended workers: 2
+- Parallel groups: [phase-1-api + phase-2-template] — different files, no deps
+- Sequential chain: phase-3 → phase-4 → phase-5
+
+Key Technical Details for Coder Agents:
+- client.js is an IIFE (not ES module) — keep all new code inside the IIFE
+- Only client.js is loaded via <script> tag; app.js is NOT browser-loaded
+- Transit box IDs must match: {bus,ubahn,tram,sbahn}-{delayed,cancelled}-count
+- State → CSS class: 'status-' + state.toLowerCase()
+- Stale warning: create/remove DOM element dynamically (not toggle display)
+- Timestamp formatting: new Date(timestamp).toLocaleString('de-DE')
+- On fetch() error: fall back to window.location.reload()
+- Jest runs with NODE_OPTIONS='--experimental-vm-modules' for ESM support
+- Tests use happy-dom with global.document injection pattern
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  cd . && npm install
+  NODE_OPTIONS='--experimental-vm-modules' npx jest tests/integration/api.test.js --no-coverage
+
+Or to start the dev server:
+
+  node --watch src/server.js
+
+=== END SESSION 1 ===

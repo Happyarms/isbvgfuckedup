@@ -1,0 +1,124 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Is BVG Fucked Up? — Convert to Static Site
+Workspace: C:\vcs\isbvgfuckedup
+Started: 2026-01-26 20:40 UTC
+
+Workflow Type: feature
+Rationale: Greenfield static site implementation plus cleanup of Node.js artifacts. No source code exists — only documentation and config files from a previously planned but never implemented Node.js approach.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Phases: 3
+- Total subtasks: 8
+- Created init.sh
+- Created project_index.json (static site target architecture)
+- Created context.json (files to create/modify/delete, patterns, gotchas)
+
+Phase Summary:
+- Phase 1 (Static Site Implementation): 3 subtasks, depends on: none
+  - subtask-1-1: Create index.html (HTML structure, meta tags, semantic markup)
+  - subtask-1-2: Create css/style.css (bold design, status colors, responsive)
+  - subtask-1-3: Create js/app.js (VBB API fetch, status calculation, auto-refresh)
+- Phase 2 (Infrastructure Cleanup & Documentation): 4 subtasks, depends on: Phase 1
+  - subtask-2-1: Rewrite nginx-site.conf (static file serving)
+  - subtask-2-2: Delete ecosystem.config.js + spec.md, update .gitignore
+  - subtask-2-3: Rewrite README.md (static site docs)
+  - subtask-2-4: Rewrite DEPLOYMENT.md (nginx deployment guide)
+- Phase 3 (Integration Verification): 1 subtask, depends on: Phase 2
+  - subtask-3-1: End-to-end verification (all checks)
+
+Services Involved:
+- static-website: Pure HTML/CSS/JS served by nginx, calling VBB API from browser
+
+Key Constraints:
+- ABSOLUTE NO Node.js — no npm, no package.json, no require(), no build step
+- Browser calls VBB Transport REST API directly (CORS enabled, no auth)
+- Total page size must be under 50KB (HTML + CSS + JS)
+- Thresholds: DEGRADED >= 30%, FUCKED >= 60% disruption
+- Delay threshold: > 300 seconds (5 minutes)
+- 4 stations: Hauptbahnhof, Alexanderplatz, Zoo, Friedrichstrasse
+- Auto-refresh every 60 seconds
+
+Parallelism Analysis:
+- Max parallel phases: 1
+- Recommended workers: 1
+- Parallel groups: None (sequential — small project, each phase depends on previous)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 003 --parallel 1
+
+=== END SESSION 1 ===
+
+=== SESSION 2: Integration Verification (subtask-3-1) ===
+Started: 2026-01-27
+
+subtask-3-1: End-to-end verification of the complete static site
+
+AUTOMATED CHECKS:
+  [PASS] Check 1 — No Node.js artifacts
+         package.json: not found ✓
+         node_modules/: not found ✓
+         ecosystem.config.js: not found ✓
+         spec.md: not found ✓
+
+  [PASS] Check 2 — No require/import in js/app.js
+         require() occurrences: 0 ✓
+         import occurrences: 0 ✓
+
+  [PASS] Check 3 — Combined file size under 50KB
+         index.html: 2,309 bytes
+         css/style.css: 5,620 bytes
+         js/app.js: 7,559 bytes
+         Total: 15,488 bytes (30% of 51,200 limit) ✓
+
+  [PASS] Check 4 — nginx-site.conf configuration
+         proxy_pass: 0 occurrences (none, correct) ✓
+         root directive: present → /var/www/isbvgfuckedup ✓
+         try_files: present → $uri $uri/ /index.html ✓
+
+  [PASS] Check 5 — Documentation has no Node.js references
+         README.md: 0 matches for node.js/npm/express/pm2 ✓
+         DEPLOYMENT.md: 0 matches for node.js/npm/express/pm2 ✓
+
+  [PASS] Check 6 — HTML contains BVG-related content
+         "BVG" appears 5 times in index.html ✓
+         Title: "Is BVG Fucked Up?" ✓
+         Meta description references BVG ✓
+
+MANUAL CHECKS (verified via code review):
+  [REVIEW] Check 7 — Loading state then YES/NO status
+           index.html has #loading div with spinner + "Lade aktuelle Daten…"
+           js/app.js: showLoading() hides status, refreshStatus() shows result ✓
+
+  [REVIEW] Check 8 — Metrics (delay%, cancel%) displayed
+           index.html has #metrics section with #delay-pct and #cancel-pct
+           js/app.js: updateUI() calls formatPct() for both values ✓
+
+  [REVIEW] Check 9 — Auto-refresh every 60 seconds
+           js/app.js: setInterval(refreshStatus, CONFIG.REFRESH_INTERVAL_MS)
+           CONFIG.REFRESH_INTERVAL_MS = 60000 ✓
+
+  [REVIEW] Check 10 — No console.log/debug statements
+           Verified: zero console.log/console.error/console.warn in js/app.js ✓
+
+  [REVIEW] Check 11 — Responsive on mobile viewport
+           css/style.css: @media (max-width: 768px) tablet breakpoint
+           css/style.css: @media (max-width: 480px) mobile breakpoint
+           Metrics stack vertically on mobile, font sizes scale down ✓
+
+FILE INVENTORY:
+  index.html          — Main HTML page (semantic, accessible, noscript fallback)
+  css/style.css       — Bold minimalist design with CSS custom properties
+  js/app.js           — IIFE, vanilla JS, VBB API fetch, Promise.allSettled
+  nginx-site.conf     — Static file serving, security headers, asset caching
+  README.md           — Project docs (no Node.js references)
+  DEPLOYMENT.md       — nginx deployment guide (no Node.js references)
+  .gitignore          — Ignores editor/OS files and auto-claude artifacts
+
+RESULT: ALL 6 AUTOMATED CHECKS PASSED. ALL 5 MANUAL CHECKS VERIFIED VIA CODE REVIEW.
+
+=== END SESSION 2 ===

@@ -1,0 +1,60 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Voice Assistant Integration (014)
+Workspace: 014-voice-assistant-integration
+Started: 2026-02-04
+
+Workflow Type: feature
+Rationale: Multi-service feature adding voice-optimized API endpoints and platform
+integration artifacts. Backend-first approach: service -> routes -> tests + docs (parallel).
+
+Session 1 (Planner):
+- Performed deep codebase investigation (read 15+ source/config files)
+- Created implementation_plan.json with 5 phases, 7 subtasks
+- Created project_index.json and context.json
+- Created init.sh
+
+Phase Summary:
+- Phase 1 (Voice Response Service): 1 subtask, no dependencies
+    -> Creates src/services/voice-response.js (formatVoiceResponse)
+- Phase 2 (Voice API Endpoints): 2 subtasks, depends on Phase 1
+    -> Creates src/routes/voice.js (GET / + POST /google-assistant)
+    -> Modifies src/routes/index.js to mount voice routes at /api/voice
+- Phase 3 (Integration Tests): 1 subtask, depends on Phase 2 [PARALLEL GROUP A]
+    -> Creates tests/integration/voice-api.test.js
+- Phase 4 (Documentation): 2 subtasks, depends on Phase 2 [PARALLEL GROUP A]
+    -> Creates docs/voice-assistant-setup.md
+    -> Updates README.md with /api/voice docs + voice assistant section
+- Phase 5 (Integration Verification): 1 subtask, depends on Phases 3+4
+    -> Runs npm run lint + full jest suite; fixes any issues
+
+Services Involved:
+- backend: Express.js server (Node.js 18, ESM, port 3000)
+
+Key Patterns to Follow:
+- Factory + DI: createRoutes(poller), createVoiceRoutes(poller) — same pattern
+- ESM: import/export everywhere; Jest needs NODE_OPTIONS='--experimental-vm-modules'
+- State mapping: Keyed map object by state string (STATUS_MAP pattern from status-text.js)
+- Test pattern: self-contained createMockPoller + createTestApp per test file
+- Body parsing: No global express.json() — add on voice router for POST endpoint
+- German: All user-facing / voice text in German
+
+Critical Gotchas:
+1. ESM-only project. Never use require(). Jest needs --experimental-vm-modules.
+2. CORS on /api allows only GET. POST webhook is server-to-server — CORS N/A.
+3. express.json() body parser NOT in server.js — must be added on voice router.
+4. Each test file is self-contained — copy createMockPoller/createTestApp, don't import.
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Recommended workers: 2
+- Parallel group: Phase 3 (Tests) + Phase 4 (Documentation)
+  Reason: Both depend only on Phase 2. No file overlap (tests/ vs docs/ + README.md).
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 014 --parallel 2
+
+=== END SESSION 1 ===
